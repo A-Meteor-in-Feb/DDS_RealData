@@ -1,0 +1,7 @@
+C++SDK/*
+IMU_DDS_Win/objs/x64Win64VS2019/
+IMU_DDS_Win/.vs/
+IMU_DDS_Win/*.vcxproj
+IMU_DDS_Win/*.filters
+IMU_DDS_Win/*.user
+IMU_DDS_Win/*.sln
