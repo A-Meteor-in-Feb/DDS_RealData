@@ -5,3 +5,9 @@ IMU_DDS_Win/*.vcxproj
 IMU_DDS_Win/*.filters
 IMU_DDS_Win/*.user
 IMU_DDS_Win/*.sln
+IMU_DDS_Win_Sub/objs/x64Win64VS2019/
+IMU_DDS_Win_Sub/.vs/
+IMU_DDS_Win_Sub/*.vcxproj
+IMU_DDS_Win_Sub/*.filters
+IMU_DDS_Win_Sub/*.user
+IMU_DDS_Win_Sub/*.sln
