@@ -55,10 +55,10 @@ void run_subscriber_application(unsigned int domain_id){
 
     while (!application::shutdown_requested) {
 
-        std::cout << "::IMU_data subscriber sleeping up to 1 sec..." << std::endl;
+        //std::cout << "::IMU_data subscriber sleeping up to 50 ms..." << std::endl;
 
         // Run the handlers of the active conditions. Wait for up to 1 second.
-        waitset.dispatch(dds::core::Duration(1));
+        waitset.dispatch(dds::core::Duration(0.05));
     }
 }
 
