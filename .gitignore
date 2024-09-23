@@ -1,4 +1,4 @@
-C++SDK/*
+IMU_C++SDK/*
 IMU_DDS_Win/objs/x64Win64VS2019/
 IMU_DDS_Win/.vs/
 IMU_DDS_Win/*.vcxproj
@@ -11,3 +11,10 @@ IMU_DDS_Win_Sub/*.vcxproj
 IMU_DDS_Win_Sub/*.filters
 IMU_DDS_Win_Sub/*.user
 IMU_DDS_Win_Sub/*.sln
+Controller_SDKlearning/Controller_SDK/Debug/*
+Controller_SDKlearning/Controller_SDK/Controller_SDK/Debug/*
+Controller_SDKlearning/Controller_SDK/Controller_SDK/*.vcxproj
+Controller_SDKlearning/Controller_SDK/Controller_SDK/*.filters
+Controller_SDKlearning/Controller_SDK/Controller_SDK/*.user
+Controller_SDKlearning/Controller_SDK/*.sln
+Controller_SDKlearning/Controller_SDK/.vs/
