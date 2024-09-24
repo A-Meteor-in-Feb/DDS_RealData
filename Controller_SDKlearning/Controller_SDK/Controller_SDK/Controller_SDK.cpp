@@ -3,6 +3,7 @@
 #include <locale>
 #include <codecvt>
 #include <Windows.h>
+#include <bitset>
 
 
 #include "LogitechSteeringWheelLib.h"
@@ -18,13 +19,93 @@ int joystickIndex = -1;
 DIJOYSTATE2* wheel_state;
 DIJOYSTATE2* joy_state;
 /*
-* DIJOYSTATE2:
-* 
+* typedef struct DIJOYSTATE2{
+*       Long lX;  //x-axis position
+*       Long lY;  //y-axis position
+*       Long lZ;  //z-axis position
+*       Long lRx; //x-axis rotation
+*       Long lRy; //y-axis rotation
+*       Long lRz; //z-axis rotation
+*       Long rglSlider[2]; //Position of two sliders
+*       DWORD rgdwPOV[4];  //Position of up to four point-of-view hats
+*       BYTE rgbButtons[128]; //State of 128 buttons
+*       Long lVX; //velocity along the x-axis
+*       Long lVY; //velocity along the y-axis
+*       Long lVZ; //velocity along the z-axis
+*       Long lVRx; //Angular velocity around the x-axis
+*       Long lVRy; //Angular velocity around the y-axis
+*       Long lVRz; //Angular velocity around the z-axis
+*       Long rglVSlider[2]; //velocity of the two sliders
+*       Long lAX; //acceleration along the x-axis
+*       Long lAY; //acceleration along the y-axis
+*       Long lAZ; //acceleration along the z-axis
+*       Long lARx; //angular acceleration around the x-axis
+*       Long lARy; //angular acceleration around the y-axis
+*       Long lARz; //angular acceleration around the z-axis
+*       Long rglASlider[2]; //Acceleration of the two sliders
+*       Long lFX; //force along the x-axis
+*       Long lFY; //force along the y-axis
+*       Long lFZ; //force along the z-axis
+*       Long lFRx; //torque around the x-axis
+*       Long lFRy; //torque around the y-axis
+*       Long lFRz; //torque around the z-axis
+*       Long rglFSlider[2]; //force applied to the two sliders
+* } DIJOYSTATE2;
 */
+
 
 std::string wstringToString(const std::wstring& wstr) {
     std::wstring_convert<std::codecvt_utf8<wchar_t>> converter;
     return converter.to_bytes(wstr);
+}
+
+
+std::bitset<32> getBitwiseButtons(DIJOYSTATE2* state, int max_buttons) {
+    std::bitset<32> buttons;
+    for (int i = 0; i < max_buttons; ++i) {
+        if (state && (state->rgbButtons[i] & 0x80)) {
+            /*
+            * "state->rgbButtons[i] & 0x80":
+            * This sentence is to check whether the ith button is pressed or not 
+            * by checking the higest bit's value.
+            */
+            buttons.set(i);
+            /*
+            * This 32 bits buttons is to store the specific buttons that being pressed.
+            */
+        }
+    }
+
+    return buttons;
+}
+
+
+std::bitset<32> getCombinedButtons(DIJOYSTATE2* state) {
+    std::bitset<32> buttons = getBitwiseButtons(state, 24);
+    /*
+    * We will use 24 buttons all together.
+    * And use getBitwiseButtons() to get the used ones.
+    */
+
+    if (state) {
+        switch (state->rgdwPOV[0]) {
+        case 0: buttons.set(24); break;      //up
+        case 4500: buttons.set(25); break;   //up-right
+        case 9000: buttons.set(26); break;   //right
+        case 13500: buttons.set(27); break;  //down-right
+        case 18000: buttons.set(28); break;  //down
+        case 22500: buttons.set(29); break;  //down-left
+        case 27000: buttons.set(30); break;  //left
+        case 31500: buttons.set(31); break;  //up-left
+        default: break;                      //no direction
+        }
+    }
+    /*
+    * Now, we use 32 buttons in total.
+    */
+
+    return buttons;
+
 }
 
 void initControllers() {
@@ -116,19 +197,88 @@ void handleConnection() {
         * Otherwise, the key has just been released.
         */
 
-        /*if (LogiUpdate()) {
+        if (LogiUpdate()) {
             try {
                 wheel_state = LogiGetState(wheelIndex);
                 joy_state = LogiGetState(joystickIndex);
+                /*
+                * LogiGetState(const int index):
+                * This Function returns the state of the controller in the struct DIJOYSTATE2.
+                * Use this if working with DirectInput from Microsoft windows, it requires:
+                * dinput.h
+                * index: index of the game controller
+                * If not working with DirectInput, or can't include dinput.h, use: LogiGetStateENGINES
+                */
+
+                if (wheel_state && joy_state) {
+                    std::bitset<32> wheelButtons = getCombinedButtons(wheel_state);
+                    std::bitset<32> joyButtons = getBitwiseButtons(joy_state, 32);
+
+
+                    //Data needed to transmit
+                    unsigned long wheel_buttons = wheelButtons.to_ulong();
+                    long wheel_posX = wheel_state->lX;
+                    long wheel_posY = wheel_state->lY;
+                    long wheel_posZ = wheel_state->lZ;
+                    
+                    unsigned long joy_buttons = joyButtons.to_ulong();
+                    long joy_posX = joy_state->lX;
+                    long joy_posY = joy_state->lY;
+                    long joy_posZ = joy_state->lZ;
+                    long joy_rotx = joy_state->lRx;
+                    long joy_roty = joy_state->lRy;
+
+                    /*
+                    * TO-DO: 
+                    *   1) Then send data
+                    *   2) if (connection_ok) {
+                    *           LogiPlayLeds(wheelIndex, 2, 1, 6); //Good connection
+                    *           LogiPlaySpringForce(wheelIndex, int(0), 100, 25);
+                    *      } else {
+                    *           LogiPlayLeds(wheelIndex, 6, 1, 6); //Connection interrupt
+                    *           LogiStopSpringForce(wheelIndex);
+                    *      }
+                    */
+
+                } else {
+                    std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;
+                }
+
+
             }
-        }*/
+            catch (const std::exception& e) {
+                std::cerr << "Standard Exception: " << e.what() << std::endl;
+            }
+            catch (...) {
+                std::cerr << "Unknown Error" << std::endl;
+            }
+
+            Sleep(33); // ~30Hz
+        }
+        
     }
+
+    //Ensure proper shutdown of Logitech SDK
+    LogiPlayLeds(wheelIndex, 0, 1, 6);
+    LogiStopSpringForce(wheelIndex);
+    LogiSteeringShutdown();
 }
 
 
 int main(){
 
-    initControllers();
+    try {
+        initControllers();
+        handleConnection();
+    }
+    catch (const std::exception& e) {
+        std::cerr << "Standard Initialization Exception: " << e.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Unknown Error :(" << std::endl;
+    }
 
     std::cout << "Hello World!\n";
+
+    return 0;
 }
