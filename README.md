@@ -1,2 +1,2 @@
-# DDS_IMU
-This repository is for IMU sensor data transmission via DDS, starting from September 12, 2024 :)
+### Data from all devices and tranmitted by DDS
+This repository is for data transmission via DDS, starting from September 12, 2024 :)
