@@ -94,58 +94,6 @@ void initControllers() {
 
 }
 
-/*
-void processData() {
-
-    LogiPlayLeds(wheelIndex, 4, 1, 6);
-    LogiSetOperatingRange(wheelIndex, 900);
-
-    while (GetKeyState('Q') >= 0) {
-        if (LogiUpdate()) {
-            try {
-                steeringWheel_state = LogiGetState(wheelIndex);
-                joyStick_state = LogiGetState(joystickIndex);
-                if (steeringWheel_state && joyStick_state) {
-                    std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
-                    std::bitset<32> joyButtons = getBitwiseButtons(joyStick_state, 32);
-
-                    //Data needed to transmit
-                    unsigned long wheel_buttons = wheelButtons.to_ulong();
-                    long wheel_posX = steeringWheel_state->lX;
-                    long wheel_posY = steeringWheel_state->lY;
-                    long wheel_posZ = steeringWheel_state->lZ;
-
-                    unsigned long joy_buttons = joyButtons.to_ulong();
-                    long joy_posX = joyStick_state->lX;
-                    long joy_posY = joyStick_state->lY;
-                    long joy_posZ = joyStick_state->lZ;
-                    long joy_rotx = joyStick_state->lRx;
-                    long joy_roty = joyStick_state->lRy;
-                }
-                else {
-                    std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;
-                }
-
-
-            }
-            catch (const std::exception& e) {
-                std::cerr << "Standard Exception: " << e.what() << std::endl;
-            }
-            catch (...) {
-                std::cerr << "Unknown Error" << std::endl;
-            }
-
-            Sleep(33); // ~30Hz
-        }
-
-    }
-
-    //Ensure proper shutdown of Logitech SDK
-    LogiPlayLeds(wheelIndex, 0, 1, 6);
-    LogiStopSpringForce(wheelIndex);
-    LogiSteeringShutdown();
-}*/
-
 
 void run_publisher_application(){
 
