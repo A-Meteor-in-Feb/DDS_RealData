@@ -11,8 +11,17 @@
     <!-- types , put data type here -->
     <types>
         <!-- tele2vehicle, when connected, periodically send -->
-        <struct name = "control_data">
+        <struct name = "steeringWheel_data">
             <member name="tin" type="string"/> <!-- which tele operation platform -->
+            <member name="lX" type="long" />
+            <member name="lY" type="long" />
+            <member name="lRz" type="long" />
+            <member name="rglSlider_0" type="long" />
+            <member name="buttons" type="unsignedLong" />
+        </struct>
+
+        <struct name = "joyStick_data">
+            <member name="tin" type="string" />
             <member name="lX" type="long" />
             <member name="lY" type="long" />
             <member name="lZ" type="long" />
@@ -31,9 +40,14 @@
         
         <domain name="Domain" domain_id="0">
 
-            <register_type name="control_type" type_ref="control_data"></register_type>
-            <topic name="control_topic" register_type_ref="control_type">   
-                <topic_qos name="control_qos" base_name="qosLibrary::DefaultProfile"></topic_qos>
+            <register_type name="steeringWheel_type" type_ref="steeringWheel_data"></register_type>
+            <topic name="steeringWheel_topic" register_type_ref="steeringWheel_type">   
+                <topic_qos name="steeringWheel_qos" base_name="qosLibrary::DefaultProfile"></topic_qos>
+            </topic>
+
+            <register_type name="joyStick_type" type_ref="joyStick_data"></register_type>
+            <topic name="joyStick_topic" register_type_ref="joyStick_type">   
+                <topic_qos name="joyStick_qos" base_name="qosLibrary::DefaultProfile"></topic_qos>
             </topic>
 
         </domain>
@@ -45,7 +59,8 @@
         <domain_participant name="Publishers" domain_ref="DomainLibrary::Domain">
             
             <publisher name="Tele_Publisher">
-                <data_writer name="control_DataWriter" topic_ref="control_topic"></data_writer>
+                <data_writer name="steeringWheel_DataWriter" topic_ref="steeringWheel_topic"></data_writer>
+                <data_writer name="joyStick_DataWriter" topic_ref="joyStick_topic"></data_writer>
             </publisher>
         
         </domain_participant>
@@ -55,7 +70,8 @@
         <domain_participant name = "Subscribers" domain_ref = "DomainLibrary::Domain">
 
             <subscriber name="Vehicle_Subscriber">
-                <data_reader name="control_DataReader" topic_ref="control_topic"></data_reader>
+                <data_reader name="steeringWheel_DataReader" topic_ref="steeringWheel_topic"></data_reader>
+                <data_reader name="joyStick_DataReader" topic_ref="joyStick_topic"></data_reader>
             </subscriber>
             
         </domain_participant>

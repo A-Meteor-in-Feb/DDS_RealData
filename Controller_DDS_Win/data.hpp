@@ -10,8 +10,8 @@ For more information, type 'rtiddsgen -help' at a command shell
 or consult the Code Generator User's Manual.
 */
 
-#ifndef data_1787940194_hpp
-#define data_1787940194_hpp
+#ifndef data_1787941111_hpp
+#define data_1787941111_hpp
 
 #include <iosfwd>
 
@@ -63,18 +63,129 @@ or consult the Code Generator User's Manual.
 #define NDDSUSERDllExport __declspec(dllexport)
 #endif
 
+class NDDSUSERDllExport steeringWheel_data {
+  public:
+
+    steeringWheel_data();
+
+    steeringWheel_data(const std::string& tin_,int32_t lX_,int32_t lY_,int32_t lRz_,int32_t rglSlider_0_,uint32_t buttons_);
+
+    std::string& tin() noexcept {
+        return m_tin_;
+    }
+
+    const std::string& tin() const noexcept {
+        return m_tin_;
+    }
+
+    void tin(const std::string& value) {
+
+        m_tin_ = value;
+    }
+
+    void tin(std::string&& value) {
+        m_tin_ = std::move(value);
+    }
+    int32_t& lX() noexcept {
+        return m_lX_;
+    }
+
+    const int32_t& lX() const noexcept {
+        return m_lX_;
+    }
+
+    void lX(int32_t value) {
+
+        m_lX_ = value;
+    }
+
+    int32_t& lY() noexcept {
+        return m_lY_;
+    }
+
+    const int32_t& lY() const noexcept {
+        return m_lY_;
+    }
+
+    void lY(int32_t value) {
+
+        m_lY_ = value;
+    }
+
+    int32_t& lRz() noexcept {
+        return m_lRz_;
+    }
+
+    const int32_t& lRz() const noexcept {
+        return m_lRz_;
+    }
+
+    void lRz(int32_t value) {
+
+        m_lRz_ = value;
+    }
+
+    int32_t& rglSlider_0() noexcept {
+        return m_rglSlider_0_;
+    }
+
+    const int32_t& rglSlider_0() const noexcept {
+        return m_rglSlider_0_;
+    }
+
+    void rglSlider_0(int32_t value) {
+
+        m_rglSlider_0_ = value;
+    }
+
+    uint32_t& buttons() noexcept {
+        return m_buttons_;
+    }
+
+    const uint32_t& buttons() const noexcept {
+        return m_buttons_;
+    }
+
+    void buttons(uint32_t value) {
+
+        m_buttons_ = value;
+    }
+
+    bool operator == (const steeringWheel_data& other_) const;
+    bool operator != (const steeringWheel_data& other_) const;
+
+    void swap(steeringWheel_data& other_) noexcept ;
+
+  private:
+
+    std::string m_tin_;
+    int32_t m_lX_;
+    int32_t m_lY_;
+    int32_t m_lRz_;
+    int32_t m_rglSlider_0_;
+    uint32_t m_buttons_;
+
+};
+
+inline void swap(steeringWheel_data& a, steeringWheel_data& b)  noexcept 
+{
+    a.swap(b);
+}
+
+NDDSUSERDllExport std::ostream& operator<<(std::ostream& o, const steeringWheel_data& sample);
+
 #if (defined(RTI_WIN32) || defined (RTI_WINCE)) && defined(NDDS_USER_DLL_EXPORT)
 // On Windows, dll-export template instantiations of standard types used by
 // other dll-exported types
 template class NDDSUSERDllExport std::allocator< int32_t >;
 template class NDDSUSERDllExport std::vector< int32_t >;
 #endif
-class NDDSUSERDllExport control_data {
+class NDDSUSERDllExport joyStick_data {
   public:
 
-    control_data();
+    joyStick_data();
 
-    control_data(const std::string& tin_,int32_t lX_,int32_t lY_,int32_t lZ_,int32_t lRx_,int32_t lRy_,int32_t lRz_,uint32_t buttons_,const ::rti::core::bounded_sequence< int32_t, 2L >& rglSlider_);
+    joyStick_data(const std::string& tin_,int32_t lX_,int32_t lY_,int32_t lZ_,int32_t lRx_,int32_t lRy_,int32_t lRz_,uint32_t buttons_,const ::rti::core::bounded_sequence< int32_t, 2L >& rglSlider_);
 
     std::string& tin() noexcept {
         return m_tin_;
@@ -199,10 +310,10 @@ class NDDSUSERDllExport control_data {
     void rglSlider(::rti::core::bounded_sequence< int32_t, 2L >&& value) {
         m_rglSlider_ = std::move(value);
     }
-    bool operator == (const control_data& other_) const;
-    bool operator != (const control_data& other_) const;
+    bool operator == (const joyStick_data& other_) const;
+    bool operator != (const joyStick_data& other_) const;
 
-    void swap(control_data& other_) noexcept ;
+    void swap(joyStick_data& other_) noexcept ;
 
   private:
 
@@ -218,12 +329,12 @@ class NDDSUSERDllExport control_data {
 
 };
 
-inline void swap(control_data& a, control_data& b)  noexcept 
+inline void swap(joyStick_data& a, joyStick_data& b)  noexcept 
 {
     a.swap(b);
 }
 
-NDDSUSERDllExport std::ostream& operator<<(std::ostream& o, const control_data& sample);
+NDDSUSERDllExport std::ostream& operator<<(std::ostream& o, const joyStick_data& sample);
 
 #ifdef NDDS_STANDALONE_TYPE
 namespace rti { 
@@ -242,17 +353,17 @@ namespace dds {
     namespace topic {
 
         template<>
-        struct topic_type_name< ::control_data > {
+        struct topic_type_name< ::steeringWheel_data > {
             NDDSUSERDllExport static std::string value() {
-                return "control_data";
+                return "steeringWheel_data";
             }
         };
 
         template<>
-        struct is_topic_type< ::control_data > : public ::dds::core::true_type {};
+        struct is_topic_type< ::steeringWheel_data > : public ::dds::core::true_type {};
 
         template<>
-        struct topic_type_support< ::control_data > {
+        struct topic_type_support< ::steeringWheel_data > {
             NDDSUSERDllExport 
             static void register_type(
                 ::dds::domain::DomainParticipant& participant,
@@ -261,17 +372,52 @@ namespace dds {
             NDDSUSERDllExport 
             static std::vector<char>& to_cdr_buffer(
                 std::vector<char>& buffer, 
-                const ::control_data& sample,
+                const ::steeringWheel_data& sample,
                 ::dds::core::policy::DataRepresentationId representation 
                 = ::dds::core::policy::DataRepresentation::auto_id());
 
             NDDSUSERDllExport 
-            static void from_cdr_buffer(::control_data& sample, const std::vector<char>& buffer);
+            static void from_cdr_buffer(::steeringWheel_data& sample, const std::vector<char>& buffer);
             NDDSUSERDllExport 
-            static void reset_sample(::control_data& sample);
+            static void reset_sample(::steeringWheel_data& sample);
 
             NDDSUSERDllExport 
-            static void allocate_sample(::control_data& sample, int, int);
+            static void allocate_sample(::steeringWheel_data& sample, int, int);
+
+            static const ::rti::topic::TypePluginKind::type type_plugin_kind = 
+            ::rti::topic::TypePluginKind::STL;
+        };
+        template<>
+        struct topic_type_name< ::joyStick_data > {
+            NDDSUSERDllExport static std::string value() {
+                return "joyStick_data";
+            }
+        };
+
+        template<>
+        struct is_topic_type< ::joyStick_data > : public ::dds::core::true_type {};
+
+        template<>
+        struct topic_type_support< ::joyStick_data > {
+            NDDSUSERDllExport 
+            static void register_type(
+                ::dds::domain::DomainParticipant& participant,
+                const std::string & type_name);
+
+            NDDSUSERDllExport 
+            static std::vector<char>& to_cdr_buffer(
+                std::vector<char>& buffer, 
+                const ::joyStick_data& sample,
+                ::dds::core::policy::DataRepresentationId representation 
+                = ::dds::core::policy::DataRepresentation::auto_id());
+
+            NDDSUSERDllExport 
+            static void from_cdr_buffer(::joyStick_data& sample, const std::vector<char>& buffer);
+            NDDSUSERDllExport 
+            static void reset_sample(::joyStick_data& sample);
+
+            NDDSUSERDllExport 
+            static void allocate_sample(::joyStick_data& sample, int, int);
 
             static const ::rti::topic::TypePluginKind::type type_plugin_kind = 
             ::rti::topic::TypePluginKind::STL;
@@ -283,13 +429,24 @@ namespace rti {
     namespace topic {
 
         template<>
-        struct dynamic_type< ::control_data > {
+        struct dynamic_type< ::steeringWheel_data > {
             typedef ::dds::core::xtypes::StructType type;
             NDDSUSERDllExport static const ::dds::core::xtypes::StructType& get();
         };
 
         template <>
-        struct extensibility< ::control_data > {
+        struct extensibility< ::steeringWheel_data > {
+            static const ::dds::core::xtypes::ExtensibilityKind::type kind =
+            ::dds::core::xtypes::ExtensibilityKind::EXTENSIBLE;    };
+
+        template<>
+        struct dynamic_type< ::joyStick_data > {
+            typedef ::dds::core::xtypes::StructType type;
+            NDDSUSERDllExport static const ::dds::core::xtypes::StructType& get();
+        };
+
+        template <>
+        struct extensibility< ::joyStick_data > {
             static const ::dds::core::xtypes::ExtensibilityKind::type kind =
             ::dds::core::xtypes::ExtensibilityKind::EXTENSIBLE;    };
 
@@ -304,5 +461,5 @@ namespace rti {
 #define NDDSUSERDllExport
 #endif
 
-#endif // data_1787940194_hpp
+#endif // data_1787941111_hpp
 

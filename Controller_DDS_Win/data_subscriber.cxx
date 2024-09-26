@@ -8,60 +8,65 @@
 #include "data.hpp"
 #include "application.hpp"  // for command line parsing and ctrl-c
 
-#include "LogitechSteeringWheelLib.h"
 
-#pragma comment(lib, "LogitechSteeringWheelLib.lib")
 
-int process_data(dds::sub::DataReader< ::control_data> reader)
-{
-    // Take all samples
-    int count = 0;
-    dds::sub::LoanedSamples< ::control_data> samples = reader.take();
+void process_steeringWheel_data(dds::sub::DataReader< ::steeringWheel_data> reader){
+    dds::sub::LoanedSamples< ::steeringWheel_data> samples = reader.take();
+
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            count++;
             std::cout << sample.data() << std::endl;
         } else {
             std::cout << "Instance state changed to "
             << sample.info().state().instance_state() << std::endl;
         }
     }
+} 
 
-    return count; 
-} // The LoanedSamples destructor returns the loan
 
-void run_subscriber_application(unsigned int domain_id)
-{
-    // DDS objects behave like shared pointers or value types
-    // (see https://community.rti.com/best-practices/use-modern-c-types-correctly)
+void process_joyStick_data(dds::sub::DataReader< ::joyStick_data> js_reader) {
+    dds::sub::LoanedSamples< ::joyStick_data> samples = js_reader.take();
 
-    // Start communicating in a domain, usually one participant per application
-    dds::domain::DomainParticipant participant(domain_id);
+    for (auto sample : samples) {
+        if (sample.info().valid()) {
+            std::cout << sample.data() << std::endl;
+        }
+        else {
+            std::cout << "Instance state changed to "
+                << sample.info().state().instance_state() << std::endl;
+        }
+    }
+}
 
-    // Create a Topic with a name and a datatype
-    dds::topic::Topic< ::control_data> topic(participant, "Example control_data");
 
-    // Create a Subscriber and DataReader with default Qos
-    dds::sub::Subscriber subscriber(participant);
-    dds::sub::DataReader< ::control_data> reader(subscriber, topic);
+void run_subscriber_application(){ //unsigned int domain_id
 
-    // Create a ReadCondition for any data received on this reader and set a
-    // handler to process the data
-    unsigned int samples_read = 0;
-    dds::sub::cond::ReadCondition read_condition(
-        reader,
+    dds::domain::DomainParticipant participant(0);
+    dds::sub::Subscriber vehicle_subscriber(participant);
+
+    dds::topic::Topic< ::steeringWheel_data> steeringWheel_topic(participant, "steeringWheel_topic");
+    dds::topic::Topic< ::joyStick_data> joyStick_topic(participant, "joyStick_topic");
+
+    dds::sub::DataReader< ::steeringWheel_data> steeringWheel_reader(vehicle_subscriber, steeringWheel_topic);
+    dds::sub::DataReader< ::joyStick_data> joyStick_reader(vehicle_subscriber, joyStick_topic);
+
+    dds::sub::cond::ReadCondition sw_read_condition(
+        steeringWheel_reader,
         dds::sub::status::DataState::any(),
-        [reader, &samples_read]() { samples_read += process_data(reader); });
+        [steeringWheel_reader]() { process_steeringWheel_data(steeringWheel_reader); });
+
+    dds::sub::cond::ReadCondition js_read_condition(
+        joyStick_reader,
+        dds::sub::status::DataState::any(),
+        [joyStick_reader]() { process_joyStick_data(joyStick_reader); });
 
     // WaitSet will be woken when the attached condition is triggered
     dds::core::cond::WaitSet waitset;
-    waitset += read_condition;
+    waitset += sw_read_condition;
+    waitset += js_read_condition;
 
     while (!application::shutdown_requested) {
-        std::cout << "::control_data subscriber sleeping up to 1 sec..." << std::endl;
-
-        // Run the handlers of the active conditions. Wait for up to 1 second.
-        waitset.dispatch(dds::core::Duration(1));
+        waitset.dispatch(dds::core::Duration(0.033)); //~30Hz
     }
 }
 
@@ -83,16 +88,17 @@ int main(int argc, char *argv[])
     rti::config::Logger::instance().verbosity(arguments.verbosity);
 
     try {
-        run_subscriber_application(arguments.domain_id);
+        run_subscriber_application();
     } catch (const std::exception& ex) {
         // This will catch DDS exceptions
-        std::cerr << "Exception in run_subscriber_application(): " << ex.what()
-        << std::endl;
+        std::cerr << "Exception in run_subscriber_application(): " << ex.what() << std::endl;
+        return EXIT_FAILURE;
+    }
+    catch (...) {
+        std::cerr << "Unknown Error :(" << std::endl;
         return EXIT_FAILURE;
     }
 
-    // Releases the memory used by the participant factory.  Optional at
-    // application exit
     dds::domain::DomainParticipant::finalize_participant_factory();
 
     return EXIT_SUCCESS;

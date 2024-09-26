@@ -23,8 +23,8 @@ wchar_t name[256];
 int wheelIndex = -1;
 int joystickIndex = -1;
 
-DIJOYSTATE2* wheel_state;
-DIJOYSTATE2* joy_state;
+DIJOYSTATE2* steeringWheel_state;
+DIJOYSTATE2* joyStick_state;
 
 
 std::string wstringToString(const std::wstring& wstr) {
@@ -66,32 +66,35 @@ std::bitset<32> getCombinedButtons(DIJOYSTATE2* state) {
 
 
 void initControllers() {
-    while (!LogiSteeringInitialize(true)) {
-        std::cerr << "Error - couldb't detect any controller." << std::endl;
+    while (!LogiSteeringInitialize(true) && !application::shutdown_requested) {
+        std::cerr << "Error - couldn't detect any controller. Are you running as administrator?" << std::endl;
         LogiUpdate();
         Sleep(2000);
     }
 
-    for (int i = 0; i < MAX_NUMBER_OF_CONTROLLERS; i++) {
-        if (LogiIsConnected(i)) {
-            LogiGetFriendlyProductName(i, name, sizeof(name));
-            std::wstring wname(name);
-            std::string nameStr = wstringToString(wname);
+    if (!application::shutdown_requested) {
 
-            if (nameStr.find("wheel") != std::string::npos || nameStr.find("Wheel") != std::string::npos) {
-                wheelIndex = i;
-                std::cout << "Wheel detected at index: " << wheelIndex << std::endl;
-            }
-            else if (nameStr.find("stick") != std::string::npos || nameStr.find("Stick") != std::string::npos) {
-                joystickIndex = i;
-                std::cout << "JoyStick detected at index: " << joystickIndex << std::endl;
+        for (int i = 0; i < MAX_NUMBER_OF_CONTROLLERS; i++) {
+            if (LogiIsConnected(i)) {
+                LogiGetFriendlyProductName(i, name, sizeof(name));
+                std::wstring wname(name);
+                std::string nameStr = wstringToString(wname);
+
+                if (nameStr.find("wheel") != std::string::npos || nameStr.find("Wheel") != std::string::npos) {
+                    wheelIndex = i;
+                    std::cout << "Wheel detected at index: " << wheelIndex << std::endl;
+                }
+                else if (nameStr.find("stick") != std::string::npos || nameStr.find("Stick") != std::string::npos) {
+                    joystickIndex = i;
+                    std::cout << "JoyStick detected at index: " << joystickIndex << std::endl;
+                }
             }
         }
     }
 
 }
 
-
+/*
 void processData() {
 
     LogiPlayLeds(wheelIndex, 4, 1, 6);
@@ -100,24 +103,24 @@ void processData() {
     while (GetKeyState('Q') >= 0) {
         if (LogiUpdate()) {
             try {
-                wheel_state = LogiGetState(wheelIndex);
-                joy_state = LogiGetState(joystickIndex);
-                if (wheel_state && joy_state) {
-                    std::bitset<32> wheelButtons = getCombinedButtons(wheel_state);
-                    std::bitset<32> joyButtons = getBitwiseButtons(joy_state, 32);
+                steeringWheel_state = LogiGetState(wheelIndex);
+                joyStick_state = LogiGetState(joystickIndex);
+                if (steeringWheel_state && joyStick_state) {
+                    std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
+                    std::bitset<32> joyButtons = getBitwiseButtons(joyStick_state, 32);
 
                     //Data needed to transmit
                     unsigned long wheel_buttons = wheelButtons.to_ulong();
-                    long wheel_posX = wheel_state->lX;
-                    long wheel_posY = wheel_state->lY;
-                    long wheel_posZ = wheel_state->lZ;
+                    long wheel_posX = steeringWheel_state->lX;
+                    long wheel_posY = steeringWheel_state->lY;
+                    long wheel_posZ = steeringWheel_state->lZ;
 
                     unsigned long joy_buttons = joyButtons.to_ulong();
-                    long joy_posX = joy_state->lX;
-                    long joy_posY = joy_state->lY;
-                    long joy_posZ = joy_state->lZ;
-                    long joy_rotx = joy_state->lRx;
-                    long joy_roty = joy_state->lRy;
+                    long joy_posX = joyStick_state->lX;
+                    long joy_posY = joyStick_state->lY;
+                    long joy_posZ = joyStick_state->lZ;
+                    long joy_rotx = joyStick_state->lRx;
+                    long joy_roty = joyStick_state->lRy;
                 }
                 else {
                     std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;
@@ -141,37 +144,101 @@ void processData() {
     LogiPlayLeds(wheelIndex, 0, 1, 6);
     LogiStopSpringForce(wheelIndex);
     LogiSteeringShutdown();
-}
+}*/
 
 
-void run_publisher_application(unsigned int domain_id){
+void run_publisher_application(){
 
-    dds::domain::DomainParticipant participant(domain_id);
+    LogiPlayLeds(wheelIndex, 4, 1, 6);
+    LogiSetOperatingRange(wheelIndex, 900);
 
-    dds::topic::Topic< ::control_data> topic(participant, "Example control_data");
+    dds::domain::DomainParticipant participant(0);
+    dds::pub::Publisher teleop_publisher(participant);
 
-    dds::pub::Publisher publisher(participant);
+    dds::topic::Topic< ::steeringWheel_data> steeringWheel_topic(participant, "steeringWheel_topic");
+    dds::topic::Topic< ::joyStick_data> joyStick_topic(participant, "joyStick_topic");
 
-    dds::pub::DataWriter< ::control_data> writer(publisher, topic);
+    dds::pub::DataWriter< ::steeringWheel_data> steeringWheel_writer(teleop_publisher, steeringWheel_topic);
+    dds::pub::DataWriter < ::joyStick_data> joyStick_writer(teleop_publisher, joyStick_topic);
 
-    ::control_data data;
+    ::steeringWheel_data steeringWheel_data;
+    ::joyStick_data joyStick_data;
     
     while (!application::shutdown_requested) {
-        // Modify the data to be written here
-        data.lX(static_cast< int32_t>(1));
-        data.lY(static_cast< int32_t>(1));
-        data.lZ(static_cast< int32_t>(1));
-        data.lRx(static_cast< int32_t>(1));
-        data.lRy(static_cast< int32_t>(1));
-        data.lRz(static_cast< int32_t>(1));
-        data.buttons(1);
 
-        std::cout << "Writing ::control_data" << std::endl;
+        if (GetKeyState('Q') < 0) {
+            application::shutdown_requested = true;
+            break;
+        }
 
-        writer.write(data);
+        if (LogiUpdate()) {
+            try {
+
+                steeringWheel_state = LogiGetState(wheelIndex);
+                joyStick_state = LogiGetState(joystickIndex);
+
+
+                if (steeringWheel_state && joyStick_state) {
+                    std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
+                    std::bitset<32> joyButtons = getBitwiseButtons(joyStick_state, 32);
+
+                    //Data needed to transmit
+                    long sw_lX = steeringWheel_state->lX;
+                    long sw_lY = steeringWheel_state->lY;
+                    long sw_lRz = steeringWheel_state->lRz;
+                    long sw_rglSlider_0 = steeringWheel_state->rglSlider[0];
+                    unsigned long sw_buttons = wheelButtons.to_ulong();
+
+
+                    long js_lX = joyStick_state->lX;
+                    long js_lY = joyStick_state->lY;
+                    long js_lZ = joyStick_state->lZ;
+                    long js_lRx = joyStick_state->lRx;
+                    long js_lRy = joyStick_state->lRy;
+                    long js_lRz = joyStick_state->lRz;
+                    unsigned long js_buttons = joyButtons.to_ulong();
+                    long js_rglSlider[2] = { joyStick_state->rglSlider[0], joyStick_state->rglSlider[1] };
+
+
+                    steeringWheel_data.lX(sw_lX);
+                    steeringWheel_data.lY(sw_lY);
+                    steeringWheel_data.lRz(sw_lRz);
+                    steeringWheel_data.rglSlider_0(sw_rglSlider_0);
+                    steeringWheel_data.buttons(sw_buttons);
+
+                    joyStick_data.lX(js_lX);
+                    joyStick_data.lY(js_lY);
+                    joyStick_data.lZ(js_lZ);
+                    joyStick_data.lRx(js_lRx);
+                    joyStick_data.lRy(js_lRy);
+                    joyStick_data.lRz(js_lRz);
+                    joyStick_data.buttons(js_buttons);
+                    joyStick_data.rglSlider({ js_rglSlider[0], js_rglSlider[1] });
+
+                    steeringWheel_writer.write(steeringWheel_data);
+                    joyStick_writer.write(joyStick_data);
+
+
+                    std::cout << "Writing: steeringWheel_data & joyStick_data" << std::endl;
+                }
+                else {
+                    std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;
+                }
+
+
+            }
+            catch (const std::exception& e) {
+                std::cerr << "Standard Exception: " << e.what() << std::endl;
+            }
+            catch (...) {
+                std::cerr << "Unknown Error" << std::endl;
+            }
+
+            Sleep(33); // ~30Hz
+        }
 
         // Send once every second
-        rti::util::sleep(dds::core::Duration(1));
+        //rti::util::sleep(dds::core::Duration(1));
     }
 }
 
@@ -190,9 +257,19 @@ int main(int argc, char *argv[]){
     rti::config::Logger::instance().verbosity(arguments.verbosity);
 
     try {
+        /*HMODULE hModule;
+        do{
+            hModule = LoadLibrary("LogitechSteeringWheellEnginesWrapper.dll");
+            std::cerr << "Failed to load dll file :( " << std::endl;
+        } while (hModule == NULL);
+        
+        std::cout << "Loaded dll file successfully :)" << std::endl;*/
+        
         initControllers();
-        processData();
-        run_publisher_application(arguments.domain_id);
+        //processData();
+        if (!application::shutdown_requested) {
+            run_publisher_application();
+        }
     } catch (const std::exception& ex) {
         std::cerr << "Exception in run_publisher_application(): " << ex.what() << std::endl;
         return EXIT_FAILURE;
