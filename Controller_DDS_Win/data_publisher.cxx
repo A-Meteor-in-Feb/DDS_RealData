@@ -64,17 +64,29 @@ std::bitset<32> getCombinedButtons(DIJOYSTATE2* state) {
 
 }
 
+LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
+    switch (uMsg) {
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 0;
+        default:
+            return DefWindowProc(hwnd, uMsg, wParam, lParam);
+    }
+}
+
 
 void initControllers() {
+
     while (!LogiSteeringInitialize(true) && !application::shutdown_requested) {
         std::cerr << "Error - couldn't detect any controller. Are you running as administrator?" << std::endl;
         LogiUpdate();
-        Sleep(2000);
+        Sleep(100);
     }
 
     if (!application::shutdown_requested) {
 
         for (int i = 0; i < MAX_NUMBER_OF_CONTROLLERS; i++) {
+
             if (LogiIsConnected(i)) {
                 LogiGetFriendlyProductName(i, name, sizeof(name));
                 std::wstring wname(name);
@@ -124,7 +136,6 @@ void run_publisher_application(){
 
                 steeringWheel_state = LogiGetState(wheelIndex);
                 joyStick_state = LogiGetState(joystickIndex);
-
 
                 if (steeringWheel_state && joyStick_state) {
                     std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
@@ -205,19 +216,60 @@ int main(int argc, char *argv[]){
     rti::config::Logger::instance().verbosity(arguments.verbosity);
 
     try {
-        /*HMODULE hModule;
-        do{
-            hModule = LoadLibrary("LogitechSteeringWheellEnginesWrapper.dll");
-            std::cerr << "Failed to load dll file :( " << std::endl;
-        } while (hModule == NULL);
-        
-        std::cout << "Loaded dll file successfully :)" << std::endl;*/
+
+        HINSTANCE hInstance = GetModuleHandle(NULL);
+        WNDCLASS wc = {};
+        wc.lpfnWndProc = WindowProc;
+        wc.hInstance = hInstance;
+        wc.lpszClassName = "PLEASE!!!! SUCCESS!!! I don't want to DEBUG!!!";
+        RegisterClass(&wc);
+        HWND hwnd = CreateWindowEx(
+            0,
+            "PLEASE!!!! SUCCESS!!! I don't want to DEBUG!!!",
+            "PLEASE!!!! SUCCESS!!! I don't want to DEBUG!!!",
+            WS_OVERLAPPEDWINDOW,
+            38, 20, 50, 50,
+            NULL,
+            NULL,
+            hInstance,
+            NULL
+        );
+        if (hwnd == NULL) {
+            std::cerr << "Failed to create window." << std::endl;
+            return 0;
+        }
+
+        ShowWindow(hwnd, SW_SHOW);
+        SetForegroundWindow(hwnd);
+
+        /*MSG msg = {};
+        while (GetMessage(&msg, NULL, 0, 0)) {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }*/
         
         initControllers();
-        //processData();
+        
         if (!application::shutdown_requested) {
+            MSG msg = {};
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            }
             run_publisher_application();
         }
+
+        if (application::shutdown_requested) {
+            DWORD ProcessId;
+            HANDLE hProcess;
+            if (GetWindowThreadProcessId(hwnd, &ProcessId) != 0) {
+                hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, ProcessId);
+                if (hProcess != NULL) {
+                    TerminateProcess(hProcess, 0);
+                }
+            }
+        }
+
     } catch (const std::exception& ex) {
         std::cerr << "Exception in run_publisher_application(): " << ex.what() << std::endl;
         return EXIT_FAILURE;

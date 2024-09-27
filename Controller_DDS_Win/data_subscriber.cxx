@@ -15,7 +15,12 @@ void process_steeringWheel_data(dds::sub::DataReader< ::steeringWheel_data> read
 
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            std::cout << sample.data() << std::endl;
+            std::cout << "============================SteeringWheel Data============================" << std::endl;
+            std::cout << "SteeringWheel lX: " << sample.data().lX() << std::endl;
+            std::cout << "SteeringWheel lY: " << sample.data().lY() << std::endl;
+            std::cout << "SteeringWheel lRz: " << sample.data().lRz() << std::endl;
+            std::cout << "SteeringWheel rglSlider_0: " << sample.data().rglSlider_0() << std::endl;
+            std::cout << "SteeringWheel buttons: " << sample.data().buttons() << std::endl;
         } else {
             std::cout << "Instance state changed to "
             << sample.info().state().instance_state() << std::endl;
@@ -29,7 +34,15 @@ void process_joyStick_data(dds::sub::DataReader< ::joyStick_data> js_reader) {
 
     for (auto sample : samples) {
         if (sample.info().valid()) {
-            std::cout << sample.data() << std::endl;
+            std::cout << "============================JoyStick Data============================" << std::endl;
+            std::cout << "JoyStick lX: " << sample.data().lX() << std::endl;
+            std::cout << "JoyStick lY: " << sample.data().lY() << std::endl;
+            std::cout << "JoyStick lZ: " << sample.data().lZ() << std::endl;
+            std::cout << "JoyStick lRx: " << sample.data().lRx() << std::endl;
+            std::cout << "JoyStick lRy: " << sample.data().lRy() << std::endl;
+            std::cout << "JoyStick lRz: " << sample.data().lRz() << std::endl;
+            std::cout << "JoyStick rglSliders: " << sample.data().rglSlider() << std::endl;
+            std::cout << "JoyStick buttons: " << sample.data().buttons() << std::endl;
         }
         else {
             std::cout << "Instance state changed to "
@@ -67,6 +80,7 @@ void run_subscriber_application(){ //unsigned int domain_id
 
     while (!application::shutdown_requested) {
         waitset.dispatch(dds::core::Duration(0.033)); //~30Hz
+        //waitset.dispatch(dds::core::Duration(10)); 
     }
 }
 
