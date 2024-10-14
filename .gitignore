@@ -24,3 +24,4 @@ Controller_DDS_Win/*.vcxproj
 Controller_DDS_Win/*.filters
 Controller_DDS_Win/*.user
 Controller_DDS_Win/*.sln
+python-elgato-streamdeck/*

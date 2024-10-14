@@ -241,18 +241,12 @@ int main(int argc, char *argv[]){
 
         ShowWindow(hwnd, SW_SHOW);
         SetForegroundWindow(hwnd);
-
-        /*MSG msg = {};
-        while (GetMessage(&msg, NULL, 0, 0)) {
-            TranslateMessage(&msg);
-            DispatchMessage(&msg);
-        }*/
         
         initControllers();
         
         if (!application::shutdown_requested) {
             MSG msg = {};
-            if (GetMessage(&msg, NULL, 0, 0)) {
+            if (GetMessage(&msg, NULL, 0, 0)) { //while()
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
