@@ -25,3 +25,11 @@ Controller_DDS_Win/*.filters
 Controller_DDS_Win/*.user
 Controller_DDS_Win/*.sln
 python-elgato-streamdeck/*
+StreamDeck_Tests/StreamDeck_Python/.idea/*
+StreamDeck_Tests/StreamDeck_Python/venv/*
+StreamDeck_Tests/Teleop_CPP/*.vcxproj
+StreamDeck_Tests/Teleop_CPP/*.filters
+StreamDeck_Tests/Teleop_CPP/*.sln
+StreamDeck_Tests/Vehicle_CPP/*.vcxproj
+StreamDeck_Tests/Vehicle_CPP/*.filters
+StreamDeck_Tests/Vehicle_CPP/*.sln

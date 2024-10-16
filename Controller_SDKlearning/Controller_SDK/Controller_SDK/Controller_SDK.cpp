@@ -16,6 +16,11 @@ wchar_t name[256];
 int wheelIndex = -1;
 int joystickIndex = -1;
 
+/********************************************************************
+* TO-DO:
+* std::bitset<32> deckButtons = std::bitset<32>(64);
+*********************************************************************/
+
 DIJOYSTATE2* wheel_state;
 DIJOYSTATE2* joy_state;
 /*
@@ -210,6 +215,20 @@ void handleConnection() {
                 * If not working with DirectInput, or can't include dinput.h, use: LogiGetStateENGINES
                 */
 
+                /******************************************************************************
+                * This place we need to receive deck message, about the buttons
+                * message = received_message;
+                * if received the message{
+                *       std::string deck_message(static_cast<char*>(message.data(), message.size()) )
+                *       int buttonState = std::stoi(message);       //convert the string to integer first,
+                *       deckButtons = std::bitset<32>(buttonState); //convert the int to bits then.
+                * }
+                * 
+                * The initialization of deckButtons is :
+                *       std::bitset<32> deckButtons = std::bitset<32>(64);
+                *       0000 0000  0000 0000  0000 0000  0100 0000
+                ********************************************************************************/
+
                 if (wheel_state && joy_state) {
                     std::bitset<32> wheelButtons = getCombinedButtons(wheel_state);
                     std::bitset<32> joyButtons = getBitwiseButtons(joy_state, 32);
@@ -227,6 +246,12 @@ void handleConnection() {
                     long joy_posZ = joy_state->lZ;
                     long joy_rotx = joy_state->lRx;
                     long joy_roty = joy_state->lRy;
+
+                    /*****************************************************
+                    * TO-DO:
+                    * deckButtons.to_ulong();
+                    * then, send this 'deckButtons' data.
+                    ******************************************************/
 
                     /*
                     * TO-DO: 

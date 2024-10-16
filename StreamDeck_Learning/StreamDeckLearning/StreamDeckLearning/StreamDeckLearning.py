@@ -9,6 +9,7 @@ from StreamDeck.ImageHelpers import PILHelper
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "images")
 
 
+
 # Define gear button mappings with priority based on order (P > N > D > R)
 GEAR_BUTTONS = {
     6: 'P',
@@ -129,12 +130,15 @@ def main():
 
     initialize = False
 
+    ####################################### TO-DO ###################################################
+    #send the initial button value  ----->>>> str(button_states)
     #send_initial_button_states(pair_socket) 
     '''
         This function is to utilize socket to send initial button states. 
-        However, why do we need to send the initial button states and
-        Do we need to use DDS to send initial button states to ... who or which device.
+        However, why do we need to send the initial button states and --- MAYBE this question is unimportant...
+        Do we need to use DDS to send initial button states to ... who or which device. --- obviously, to the controller side, that is, the teleoperation side.
     '''
+    ##################################################################################################
 
     show_text(streamdeck, 8, "Connecting", 14, centered=True)
 
@@ -148,6 +152,7 @@ def main():
 
     @streamdeck.set_key_callback
     def key_callback(deck, key, state):
+        print("deck", deck, "key", key, "state", state)
         global button_states, gear_update_needed, selected_gear
         previous_button_states = button_states
         if key in GEAR_BUTTONS:
@@ -160,9 +165,13 @@ def main():
                         update_button_state(other_key, False)
         else:
             update_button_state(key, state)
+        
+        ########################################## TO-DO ########################################
+        #This place, I think you need to transmit data to controller side via DDS 
         #if button_states != previous_button_states:
             #pair_socket.send_string(str(button_states))
             #send the updated button state
+        ##########################################################################################
     
     kb.add_hotkey('q', lambda: exit_program(streamdeck))
     
@@ -178,15 +187,17 @@ def main():
     try: 
         while True:
             current_time = time.time()
-
+            
             try:
-                message = "0.22"
+
                 #message = reciever in DDS to receive message
+                message = "0.22"
                 print("Received message ", message)
 
                 if not initialize:
                     for button in GEAR_BUTTONS:
                         set_button_image(streamdeck, button, 'unselect')
+
                     set_button_image(streamdeck, list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], 'select')
                     show_text(streamdeck, 8, "", 22)
                     update_button_state(list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], True)
@@ -196,8 +207,8 @@ def main():
                 depth = message  #keep the first two deciaml numbers. then convert it into string
                 auto_flag = '1'
                 last_received_time = current_time
-            except Exception:
-                print("Exception")
+            except Exception as e:
+                print("Exception", e)
 
             if gear_update_needed:
                 update_gear(streamdeck, selected_gear)
@@ -220,7 +231,10 @@ def main():
                     show_text(streamdeck, 14, "Depth:\nN/A", 22)
                     show_text(streamdeck, 4, "NA", 22, centered=True)
                     print("Cleared height and depth due to timeout")
+
+
             time.sleep(0.01)
+
     except KeyboardInterrupt:
         pass
     except Exception:
@@ -231,4 +245,5 @@ def main():
 
 
 if __name__ == "__main__":
+    print(ASSETS_PATH)
     main()
