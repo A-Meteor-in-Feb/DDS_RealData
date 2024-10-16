@@ -20,7 +20,7 @@
 namespace application {
 
     // Catch control-C and tell application to shut down
-    bool shutdown_requested = false;
+    extern bool shutdown_requested;
 
     inline void stop_handler(int)
     {

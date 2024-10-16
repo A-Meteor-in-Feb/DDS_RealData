@@ -1,30 +1,10 @@
-/*
-* (c) Copyright, Real-Time Innovations, 2020.  All rights reserved.
-* RTI grants Licensee a license to use, modify, compile, and create derivative
-* works of the software solely for use with RTI Connext DDS. Licensee may
-* redistribute copies of the software provided that all such copies are subject
-* to this license. The software is provided "as is", with no warranty of any
-* type, including any warranty for fitness for any purpose. RTI is under no
-* obligation to maintain or support the software. RTI shall not be liable for
-* any incidental or consequential damages arising out of the use or inability
-* to use the software.
-*/
-
 #include <algorithm>
 #include <iostream>
 
 #include <dds/sub/ddssub.hpp>
 #include <dds/core/ddscore.hpp>
 #include <rti/config/Logger.hpp>  // for logging
-// alternatively, to include all the standard APIs:
-//  <dds/dds.hpp>
-// or to include both the standard APIs and extensions:
-//  <rti/rti.hpp>
-//
-// For more information about the headers and namespaces, see:
-//    https://community.rti.com/static/documentation/connext-dds/7.3.0/doc/api/connext_dds/api_cpp2/group__DDSNamespaceModule.html
-// For information on how to use extensions, see:
-//    https://community.rti.com/static/documentation/connext-dds/7.3.0/doc/api/connext_dds/api_cpp2/group__DDSCpp2Conventions.html
+
 
 #include "data.hpp"
 #include "application.hpp"  // for command line parsing and ctrl-c
