@@ -8,18 +8,13 @@ class statistic_dataPublisher:
     @staticmethod
     def run_publisher(domain_id: int, sample_count: int):
 
-        # A DomainParticipant allows an application to begin communicating in
-        # a DDS domain. Typically there is one DomainParticipant per application.
-        # DomainParticipant QoS is configured in USER_QOS_PROFILES.xml
         participant = dds.DomainParticipant(domain_id)
 
-        # A Topic has a name and a datatype.
-        topic = dds.Topic(participant, "Example statistic_data", statistic_data)
+        topic = dds.Topic(participant, "statistic_data", statistic_data)
 
-        # This DataWriter will write data on Topic "Example statistic_data"
-        # DataWriter QoS is configured in USER_QOS_PROFILES.xml
         writer = dds.DataWriter(participant.implicit_publisher, topic)
-        sample = statistic_data()        
+
+        sample = statistic_data()
 
         for count in range(sample_count):
             # Catch control-C interrupt

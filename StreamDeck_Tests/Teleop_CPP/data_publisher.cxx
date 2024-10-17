@@ -1,42 +1,30 @@
 #include <iostream>
 
 #include <dds/pub/ddspub.hpp>
-#include <rti/util/util.hpp>      // for sleep()
-#include <rti/config/Logger.hpp>  // for logging
+#include <rti/util/util.hpp>     
+#include <rti/config/Logger.hpp> 
 
-
-#include "application.hpp"  // for command line parsing and ctrl-c
 #include "data.hpp"
 
-void run_publisher_application(unsigned int domain_id, unsigned int sample_count)
-{
-    // DDS objects behave like shared pointers or value types
-    // (see https://community.rti.com/best-practices/use-modern-c-types-correctly)
+void run_publisher_application(){
+    
+    dds::domain::DomainParticipant participant(0);
 
-    // Start communicating in a domain, usually one participant per application
-    dds::domain::DomainParticipant participant(domain_id);
-
-    // Create a Topic with a name and a datatype
     dds::topic::Topic< ::statistic_data> topic(participant, "Example statistic_data");
 
-    // Create a Publisher
     dds::pub::Publisher publisher(participant);
 
-    // Create a DataWriter with default QoS
     dds::pub::DataWriter< ::statistic_data> writer(publisher, topic);
 
     ::statistic_data data;
-    // Main loop, write data
-    for (unsigned int samples_written = 0;
-    !application::shutdown_requested && samples_written < sample_count;
-    samples_written++) {
-        // Modify the data to be written here
-        data.auto_flag(static_cast< int16_t>(samples_written));
-        std::cout << "Writing ::statistic_data, count " << samples_written << std::endl;
+    
+   while(true){
+        
+        data.auto_flag(static_cast< int16_t>(1));
+        std::cout << "Writing ::statistic_data" << std::endl;
 
         writer.write(data);
 
-        // Send once every second
         rti::util::sleep(dds::core::Duration(1));
     }
 }
@@ -44,31 +32,7 @@ void run_publisher_application(unsigned int domain_id, unsigned int sample_count
 int main(int argc, char *argv[])
 {
 
-    using namespace application;
-
-    // Parse arguments and handle control-C
-    auto arguments = parse_arguments(argc, argv);
-    if (arguments.parse_result == ParseReturn::exit) {
-        return EXIT_SUCCESS;
-    } else if (arguments.parse_result == ParseReturn::failure) {
-        return EXIT_FAILURE;
-    }
-    setup_signal_handlers();
-
-    // Sets Connext verbosity to help debugging
-    rti::config::Logger::instance().verbosity(arguments.verbosity);
-
-    try {
-        run_publisher_application(arguments.domain_id, arguments.sample_count);
-    } catch (const std::exception& ex) {
-        // This will catch DDS exceptions
-        std::cerr << "Exception in run_publisher_application(): " << ex.what()
-        << std::endl;
-        return EXIT_FAILURE;
-    }
-
-    // Releases the memory used by the participant factory.  Optional at
-    // application exit
+    run_publisher_application();
     dds::domain::DomainParticipant::finalize_participant_factory();
 
     return EXIT_SUCCESS;

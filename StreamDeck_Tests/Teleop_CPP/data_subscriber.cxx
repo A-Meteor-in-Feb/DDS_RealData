@@ -16,7 +16,7 @@ void run_publisher_application(std::string tin, std::atomic<bool>& pub_begin);
 
 int main(int argc, char *argv[]){
 
-    using namespace application;
+    //using namespace application;
 
     auto arguments = parse_arguments(argc, argv);
     if (arguments.parse_result == ParseReturn::exit) {
@@ -36,10 +36,10 @@ int main(int argc, char *argv[]){
         int tele_id = arguments.sample_count;
         std::string tin = "tele" + std::to_string(tele_id);
         std::thread thread_sub(run_subscriber_application, tin, std::ref(pub_begin));
-        std::thread thread_pub(run_publisher_application, tin, std::ref(pub_begin));
+        //std::thread thread_pub(run_publisher_application, tin, std::ref(pub_begin));
 
         thread_sub.join();
-        thread_pub.join();
+        //thread_pub.join();
 
     }
 

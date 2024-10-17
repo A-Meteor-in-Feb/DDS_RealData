@@ -5,10 +5,12 @@ from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
 
+import rti.connextdds as dds
+from data import statistic_data
+from data import streamdeck_buttons_data
+
 # Folder location of image assets used by this program
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "images")
-
-
 
 # Define gear button mappings with priority based on order (P > N > D > R)
 GEAR_BUTTONS = {
@@ -48,12 +50,6 @@ button_states = 64
 
 def read_streamdeck():
 
-    ''' DeviceManager().enumerate():
-
-        Detect attached StreamDeck devices.
-        Return type: list(StreamDeck)
-        Returns: list of StreamDeck instances, one for each detected device.
-    '''
     streamdecks = DeviceManager().enumerate()
 
     print("Found {} StreamDeck(s).\n".format(len(streamdecks)))
@@ -65,7 +61,6 @@ def read_streamdeck():
     for streamdeck in streamdecks:
         streamdeck.open()
         if streamdeck.get_serial_number() == DESIRED_SERIAL_NUMBER:
-            print("Success :)")
             streamdeck.reset()
             streamdeck.set_brightness(100)
             return streamdeck
@@ -121,6 +116,70 @@ def update_gear(deck, selected_gear):
     return False
 
 
+def run_publisher():
+
+    domain_id = 0
+
+    participant = dds.DomainParticipant(domain_id)
+
+    topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
+
+    writer = dds.DataWriter(participant.implicit_publisher, topic)
+
+    button_data = streamdeck_buttons_data()
+
+    try:
+        # Modify the data to be sent here
+        button_data.buttons = button_states
+        print("Writing streamdeck_buttons_data")
+
+        writer.write(button_data)
+        time.sleep(1)
+    except KeyboardInterrupt:
+        print("preparing to shut down...")
+
+
+def process_data(reader):
+    samples = reader.take_data()
+    print(f"Received: {samples[0]}")
+    return [samples[0].height, samples[0].depth, samples[0].auto_flag]
+
+
+
+def run_subscriber():
+
+    domain_id = 0
+
+    participant = dds.DomainParticipant(domain_id)
+
+    topic = dds.Topic(participant, "statistic_data", statistic_data)
+
+    reader = dds.DataReader(participant.implicit_subscriber, topic)
+
+    message = []
+
+    def condition_handler(_):
+        nonlocal reader
+        nonlocal message
+        message = process_data(reader)
+
+    status_condition = dds.StatusCondition(reader)
+
+    status_condition.enabled_statuses = dds.StatusMask.DATA_AVAILABLE
+    status_condition.set_handler(condition_handler)
+
+    waitset = dds.WaitSet()
+    waitset += status_condition
+
+    try:
+        waitset.dispatch(dds.Duration(1))  # Wait up to 1s each time
+    except KeyboardInterrupt:
+       print("preparing to shut down...")
+
+    return message
+
+
+
 def main():
     global gear_update_needed, selected_gear
 
@@ -130,18 +189,11 @@ def main():
 
     initialize = False
 
-    ####################################### TO-DO ###################################################
-    #send the initial button value  ----->>>> str(button_states)
-    #send_initial_button_states(pair_socket) 
-    '''
-        This function is to utilize socket to send initial button states. 
-        However, why do we need to send the initial button states and --- MAYBE this question is unimportant...
-        Do we need to use DDS to send initial button states to ... who or which device. --- obviously, to the controller side, that is, the teleoperation side.
-    '''
-    ##################################################################################################
+    run_publisher()
 
     show_text(streamdeck, 8, "Connecting", 14, centered=True)
 
+    message = [0, 0, 0]
     last_received_time = time.time()
     height = None
     depth = None
@@ -165,13 +217,9 @@ def main():
                         update_button_state(other_key, False)
         else:
             update_button_state(key, state)
-        
-        ########################################## TO-DO ########################################
-        #This place, I think you need to transmit data to controller side via DDS 
-        #if button_states != previous_button_states:
-            #pair_socket.send_string(str(button_states))
-            #send the updated button state
-        ##########################################################################################
+
+        if button_states != previous_button_states:
+            run_publisher()
     
     kb.add_hotkey('q', lambda: exit_program(streamdeck))
     
@@ -190,8 +238,8 @@ def main():
             
             try:
 
-                #message = reciever in DDS to receive message
-                message = "0.22"
+                message = run_subscriber()
+
                 print("Received message ", message)
 
                 if not initialize:
@@ -203,9 +251,9 @@ def main():
                     update_button_state(list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], True)
                     initialize = True
 
-                height = message #keep the first two decimal numbers. then convert it into string
-                depth = message  #keep the first two deciaml numbers. then convert it into string
-                auto_flag = '1'
+                height = message[0]
+                depth = message[1]
+                auto_flag = message[2]
                 last_received_time = current_time
             except Exception as e:
                 print("Exception", e)
@@ -215,13 +263,13 @@ def main():
                 gear_update_needed = False
             
             if height != last_height:
-                show_text(streamdeck, 9, "Height:\n"+height+"m", 22)
+                show_text(streamdeck, 9, "Height:\n"+f"{float(height):.2f}"+"m", 22)
                 last_height = height
             if depth != last_depth:
-                show_text(streamdeck, 14, "Depth:\n"+depth+"m", 22)
+                show_text(streamdeck, 14, "Depth:\n"+f"{float(depth):.2f}"+"m", 22)
                 last_depth = depth
             if auto_flag != last_mode:
-                set_mode_image(streamdeck, 4, 'auto' if auto_flag == '1' else 'manual')
+                set_mode_image(streamdeck, 4, 'auto' if str(auto_flag) == '1' else 'manual')
                 last_mode = auto_flag
             
             if current_time - last_received_time > 0.5:
@@ -233,7 +281,7 @@ def main():
                     print("Cleared height and depth due to timeout")
 
 
-            time.sleep(0.01)
+            time.sleep(1)
 
     except KeyboardInterrupt:
         pass

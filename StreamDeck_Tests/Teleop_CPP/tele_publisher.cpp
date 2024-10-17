@@ -35,7 +35,7 @@ void run_publisher_application(std::string tin, std::atomic<bool>& pub_begin){
     ::statistic_data data;
     
 
-    while (!application::shutdown_requested && pub_begin.load()) {
+    while (!shutdown_requested && pub_begin.load()) {
 
         data.height(height);
         data.depth(depth);

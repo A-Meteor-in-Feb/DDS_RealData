@@ -32,8 +32,10 @@ StreamDeck_Tests/Teleop_CPP/*.filters
 StreamDeck_Tests/Teleop_CPP/*.sln
 StreamDeck_Tests/Teleop_CPP/*.user
 StreamDeck_Tests/Teleop_CPP/.vs/
+StreamDeck_Tests/Teleop_CPP/objs/
 StreamDeck_Tests/Vehicle_CPP/*.vcxproj
 StreamDeck_Tests/Vehicle_CPP/*.filters
 StreamDeck_Tests/Vehicle_CPP/*.sln
 StreamDeck_Tests/Vehicle_CPP/*.user
 StreamDeck_Tests/Vehicle_CPP/.vs/
+StreamDeck_Tests/Vehicle_CPP/objs/
