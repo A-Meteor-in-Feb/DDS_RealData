@@ -39,3 +39,9 @@ StreamDeck_Tests/Vehicle_CPP/*.sln
 StreamDeck_Tests/Vehicle_CPP/*.user
 StreamDeck_Tests/Vehicle_CPP/.vs/
 StreamDeck_Tests/Vehicle_CPP/objs/
+INTEGRATION_GO/Teleop_side/*.vcxproj
+INTEGRATION_GO/Teleop_side/*.filters
+INTEGRATION_GO/Teleop_side/*.sln
+INTEGRATION_GO/Teleop_side/*.user
+INTEGRATION_GO/Teleop_side/.vs/
+INTEGRATION_GO/Teleop_side/objs/
