@@ -118,8 +118,15 @@ def update_gear(deck, selected_gear):
 
 def process_data(reader):
     samples = reader.take_data()
-    print(f"Received: {samples[0]}")
-    return [samples[0].height, samples[0].depth, samples[0].auto_flag]
+    height = 0
+    depth = 0
+    auto_flag = 0
+    for sample in samples:
+        print(f"Received: {sample}")
+        height = sample.height
+        depth = sample.depth
+        auto_flag = sample.auto_flag
+    return [height, depth, auto_flag]
 
 
 def run_publisher():
@@ -280,7 +287,7 @@ def main():
                     print("Cleared height and depth due to timeout")
 
 
-            time.sleep(1)
+            time.sleep(0.01)
 
     except KeyboardInterrupt:
         pass
