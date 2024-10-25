@@ -116,6 +116,12 @@ def update_gear(deck, selected_gear):
     return False
 
 
+def process_data(reader):
+    samples = reader.take_data()
+    print(f"Received: {samples[0]}")
+    return [samples[0].height, samples[0].depth, samples[0].auto_flag]
+
+
 def run_publisher():
 
     domain_id = 0
@@ -137,13 +143,6 @@ def run_publisher():
         time.sleep(1)
     except KeyboardInterrupt:
         print("preparing to shut down...")
-
-
-def process_data(reader):
-    samples = reader.take_data()
-    print(f"Received: {samples[0]}")
-    return [samples[0].height, samples[0].depth, samples[0].auto_flag]
-
 
 
 def run_subscriber():
@@ -172,7 +171,7 @@ def run_subscriber():
     waitset += status_condition
 
     try:
-        waitset.dispatch(dds.Duration(1))  # Wait up to 1s each time
+        waitset.dispatch(dds.Duration(0.01))  # Wait up to 1s each time
     except KeyboardInterrupt:
        print("preparing to shut down...")
 

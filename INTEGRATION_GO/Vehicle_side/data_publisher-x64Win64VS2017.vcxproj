@@ -23,14 +23,14 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(RTI_VS_WINDOWS_TARGET_PLATFORM_VERSION)'==''" Label="RTI VS SDK">
     <RTI_VS_WINDOWS_TARGET_PLATFORM_VERSION>10.0.17134.0</RTI_VS_WINDOWS_TARGET_PLATFORM_VERSION>
-  </PropertyGroup>  
+  </PropertyGroup>
   <PropertyGroup Label="RTI Connext Path">
-      <LocalDebuggerEnvironment>PATH=$(NDDSHOME)\lib\x64Win64VS2017</LocalDebuggerEnvironment>
+    <LocalDebuggerEnvironment>PATH=$(NDDSHOME)\lib\x64Win64VS2017</LocalDebuggerEnvironment>
   </PropertyGroup>
   <PropertyGroup Label="Globals">
     <ProjectName>data_publisher</ProjectName>
     <RootNamespace>data_publisher</RootNamespace>
-<WindowsTargetPlatformVersion>$(RTI_VS_WINDOWS_TARGET_PLATFORM_VERSION)</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
     <ProjectGuid>{BF900500-D48B-438B-827F-01512AC24AB1}</ProjectGuid>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -38,25 +38,25 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>   
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug DLL|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>  
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseOfMfc>false</UseOfMfc>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -183,7 +183,7 @@
       <ProgramDatabaseFile>.\objs\x64Win64VS2017\data_publisher.pdb</ProgramDatabaseFile>
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX64</TargetMachine>
-   </Link>
+    </Link>
     <BuildLog>
       <Path>$(ProjectDir).\objs\x64Win64VS2017\data_publisher.log</Path>
     </BuildLog>
@@ -290,6 +290,7 @@
     </BuildLog>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="application.cpp" />
     <ClCompile Include="data_publisher.cxx">
       <Optimization Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Disabled</Optimization>
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
@@ -317,7 +318,9 @@
       <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions Condition="'$(Configuration)|$(Platform)'=='Release|x64'">%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
-   </ItemGroup>
+    <ClCompile Include="runPublisher.cpp" />
+    <ClCompile Include="runSubscriber.cpp" />
+  </ItemGroup>
   <ItemGroup>
     <ClInclude Include="data.hpp" />
     <ClInclude Include="dataPlugin.hpp" />

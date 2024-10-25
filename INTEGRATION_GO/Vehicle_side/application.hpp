@@ -17,10 +17,10 @@
 #include <csignal>
 #include <dds/core/ddscore.hpp>
 
-namespace application {
+//namespace application {
 
     // Catch control-C and tell application to shut down
-    bool shutdown_requested = false;
+    extern bool shutdown_requested;
 
     inline void stop_handler(int)
     {
@@ -136,6 +136,6 @@ namespace application {
         return ApplicationArguments(parse_result, domain_id, sample_count, verbosity);
     }
 
-}  // namespace application
+//}  // namespace application
 
 #endif  // APPLICATION_HPP

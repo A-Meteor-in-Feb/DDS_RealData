@@ -16,7 +16,6 @@
 
 void run_publisher_application();
 void initControllers();
-
 void run_subscriber_application();
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
@@ -81,11 +80,13 @@ int main(int argc, char* argv[]) {
                 TranslateMessage(&msg);
                 DispatchMessage(&msg);
             }
-            run_publisher_application();
-            run_subscriber_application();
-        }
+            std::thread tele_publisher(run_publisher_application);
+            std::thread tele_subscriber(run_subscriber_application);
 
-        if (shutdown_requested) {
+            tele_publisher.join();
+            tele_subscriber.join();
+        }
+        else {
             DWORD ProcessId;
             HANDLE hProcess;
             if (GetWindowThreadProcessId(hwnd, &ProcessId) != 0) {

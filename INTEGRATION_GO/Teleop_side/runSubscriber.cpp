@@ -98,8 +98,8 @@ void run_subscriber_application() {
     imu_waitset += read_imu_condition;
 
     while (!shutdown_requested) {
-        //Fix this frequency for receiving data of streamdeck part.
-        streamdeck_waitset.dispatch(dds::core::Duration(1));
+        //Frequency for receiving data of streamdeck part.
+        streamdeck_waitset.dispatch(dds::core::Duration(0.01));
 
         //Frequency of the imu part.
         imu_waitset.dispatch(dds::core::Duration(0.05));

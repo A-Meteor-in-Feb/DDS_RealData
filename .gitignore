@@ -45,3 +45,11 @@ INTEGRATION_GO/Teleop_side/*.sln
 INTEGRATION_GO/Teleop_side/*.user
 INTEGRATION_GO/Teleop_side/.vs/
 INTEGRATION_GO/Teleop_side/objs/
+INTEGRATION_GO/Vehicle_side/*.vcxproj
+INTEGRATION_GO/Vehicle_side/*.filters
+INTEGRATION_GO/Vehicle_side/*.sln
+INTEGRATION_GO/Vehicle_side/*.user
+INTEGRATION_GO/Vehicle_side/.vs/
+INTEGRATION_GO/Vehicle_side/objs/
+INTEGRATION_GO/Streamdeck_side/.idea/*
+INTEGRATION_GO/Streamdeck_side/__pycache__/*
