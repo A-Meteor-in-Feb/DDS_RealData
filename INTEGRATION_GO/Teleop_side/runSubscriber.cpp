@@ -90,16 +90,18 @@ void run_subscriber_application() {
         dds::sub::status::DataState::any(),
         [imu_reader]() { process_imu_data(imu_reader); });
 
-    dds::core::cond::WaitSet streamdeck_waitset;
+    dds::core::cond::WaitSet streamdeck_statistic_waitset;
+    dds::core::cond::WaitSet streamdeck_button_waitset;
     dds::core::cond::WaitSet imu_waitset;
 
-    streamdeck_waitset += read_statistic_condition;
-    streamdeck_waitset += read_buttons_condition;
+    streamdeck_statistic_waitset += read_statistic_condition;
+    streamdeck_button_waitset += read_buttons_condition;
     imu_waitset += read_imu_condition;
 
     while (!shutdown_requested) {
         //Frequency for receiving data of streamdeck part.
-        streamdeck_waitset.dispatch(dds::core::Duration(0.01));
+        streamdeck_statistic_waitset.dispatch(dds::core::Duration(0.01));
+        streamdeck_button_waitset.dispatch(dds::core::Duration(1));
 
         //Frequency of the imu part.
         imu_waitset.dispatch(dds::core::Duration(0.05));
