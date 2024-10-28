@@ -147,42 +147,42 @@ def run_publisher():
         print("Writing streamdeck_buttons_data")
 
         writer.write(button_data)
-        time.sleep(1)
+        # time.sleep(1)
     except KeyboardInterrupt:
         print("preparing to shut down...")
 
 
-def run_subscriber():
-
-    domain_id = 0
-
-    participant = dds.DomainParticipant(domain_id)
-
-    topic = dds.Topic(participant, "statistic_data", statistic_data)
-
-    reader = dds.DataReader(participant.implicit_subscriber, topic)
-
-    message = []
-
-    def condition_handler(_):
-        nonlocal reader
-        nonlocal message
-        message = process_data(reader)
-
-    status_condition = dds.StatusCondition(reader)
-
-    status_condition.enabled_statuses = dds.StatusMask.DATA_AVAILABLE
-    status_condition.set_handler(condition_handler)
-
-    waitset = dds.WaitSet()
-    waitset += status_condition
-
-    try:
-        waitset.dispatch(dds.Duration(0.01))  # Wait up to 1s each time
-    except KeyboardInterrupt:
-       print("preparing to shut down...")
-
-    return message
+# def run_subscriber():
+#
+#     domain_id = 0
+#
+#     participant = dds.DomainParticipant(domain_id)
+#
+#     topic = dds.Topic(participant, "statistic_data", statistic_data)
+#
+#     reader = dds.DataReader(participant.implicit_subscriber, topic)
+#
+#     message = []
+#
+#     def condition_handler(_):
+#         nonlocal reader
+#         nonlocal message
+#         message = process_data(reader)
+#
+#     status_condition = dds.StatusCondition(reader)
+#
+#     status_condition.enabled_statuses = dds.StatusMask.DATA_AVAILABLE
+#     status_condition.set_handler(condition_handler)
+#
+#     waitset = dds.WaitSet()
+#     waitset += status_condition
+#
+#     try:
+#         waitset.dispatch(dds.Duration(0.01))
+#     except KeyboardInterrupt:
+#        print("preparing to shut down...")
+#
+#     return message
 
 
 
@@ -195,7 +195,30 @@ def main():
 
     initialize = False
 
-    run_publisher()
+
+    #run_publisher()
+
+    domain_id = 0
+
+    participant = dds.DomainParticipant(domain_id)
+
+    topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
+
+    writer = dds.DataWriter(participant.implicit_publisher, topic)
+
+    button_data = streamdeck_buttons_data()
+
+    try:
+        # Modify the data to be sent here
+        button_data.buttons = button_states
+        print("Writing streamdeck_buttons_data")
+
+        writer.write(button_data)
+        # time.sleep(1)
+    except KeyboardInterrupt:
+        print("preparing to shut down...")
+
+
 
     show_text(streamdeck, 8, "Connecting", 14, centered=True)
 
@@ -225,7 +248,19 @@ def main():
             update_button_state(key, state)
 
         if button_states != previous_button_states:
-            run_publisher()
+            #run_publisher()
+            try:
+                # Modify the data to be sent here
+                button_data.buttons = button_states
+                print("Writing streamdeck_buttons_data")
+
+                writer.write(button_data)
+                # time.sleep(1)
+            except KeyboardInterrupt:
+                print("preparing to shut down...")
+
+
+
     
     kb.add_hotkey('q', lambda: exit_program(streamdeck))
     
@@ -238,13 +273,40 @@ def main():
         os._exit(0)
 
 
-    try: 
+
+
+    #Subscription function ... !!!
+    try:
+
+        domain_id = 0
+
+        participant = dds.DomainParticipant(domain_id)
+
+        topic = dds.Topic(participant, "statistic_data", statistic_data)
+
+        reader = dds.DataReader(participant.implicit_subscriber, topic)
+
+        message = []
+
+        def condition_handler(_):
+            nonlocal reader
+            nonlocal message
+            message = process_data(reader)
+
+        status_condition = dds.StatusCondition(reader)
+
+        status_condition.enabled_statuses = dds.StatusMask.DATA_AVAILABLE
+        status_condition.set_handler(condition_handler)
+
+        waitset = dds.WaitSet()
+        waitset += status_condition
+
         while True:
             current_time = time.time()
             
             try:
-
-                message = run_subscriber()
+                #message = run_subscriber()
+                waitset.dispatch(dds.Duration(0.01))
 
                 print("Received message ", message)
 
@@ -261,6 +323,7 @@ def main():
                 depth = message[1]
                 auto_flag = message[2]
                 last_received_time = current_time
+
             except Exception as e:
                 print("Exception", e)
 
@@ -287,7 +350,7 @@ def main():
                     print("Cleared height and depth due to timeout")
 
 
-            time.sleep(0.01)
+            #time.sleep(0.01)
 
     except KeyboardInterrupt:
         pass
