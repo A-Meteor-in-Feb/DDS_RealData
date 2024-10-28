@@ -55,8 +55,35 @@ Thank you here for Dogan, because this program is complicated based on his origi
 run_publisher() publishes the button data at frequency 1Hz (send every one second)
 run_subscriber() subscribes the statictic_data at frequency OF 100Hz (waitset.dispatch(dds.Duration(0.01)))
 
-
 ---
-Question: (about data transmission)
-1. Is there any changes about frequency ???
-2. What kinds of requirment to achieve ??? For example, reliable, order, best-effort, and so on...
+
+## How to run cloud discovery service???
+
+Step 1:
+
+```shell
+"C:\Program Files\rti_connext_dds-7.3.0\bin\rticlouddiscoveryservice.bat" -cfgFile D:\codes\hahaha\CloudDiscoverySservice\CDS4test.xml -cfgName CDS4test
+```
+
+Step 2:
+
+In the USER_QOS_PROFILE.xml, add the following lines:
+
+```xml
+<domain_participant_qos>
+    
+	<!-- Cloud Discovery Service-->
+    <transport_builtin>
+        <mask>udpv4</mask>
+    </transport_builtin>
+    <discovery>
+        <multicast_receive_addresses/>
+        <initial_peers>
+            <element>rtps@udpv4://192.168.0.167:7600</element>
+        </initial_peers>
+    </discovery>
+    <!-- Cloud Discovery Service -->
+
+</domain_participant_qos>
+```
+
