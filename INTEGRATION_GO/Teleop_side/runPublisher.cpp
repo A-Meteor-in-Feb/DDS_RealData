@@ -23,7 +23,6 @@
 
 void update_Sent_text_display(std::string sent_data);
 
-
 wchar_t name[256];
 int wheelIndex = -1;
 int joystickIndex = -1;
@@ -97,6 +96,28 @@ void initControllers() {
 
 }
 
+
+std::string convertToString_con(long sw_lX, long sw_lY, long sw_lRz, long sw_rglSlider_0, unsigned long sw_buttons) {
+    std::string con_data = "\nsteering wheel - lX: " + std::to_string(sw_lX) +
+        "\nsteering wheel - lY: " + std::to_string(sw_lY) +
+        "\nsteering wheel - eglSlider_0: " + std::to_string(sw_rglSlider_0) +
+        "\nsteering wheel - buttons: " + std::to_string(sw_buttons);
+
+    return con_data;
+}
+
+std::string convertToString_joy(long js_lX, long js_lY, long js_lZ, long js_lRx, long js_lRy, long js_lRz, unsigned long js_buttons, long js_rglSlider[2]) {
+    std::string joy_data = "\njoyStick - lX: " + std::to_string(js_lX) +
+        "\njoyStick - lY: " + std::to_string(js_lY) +
+        "\njoyStick - lZ: " + std::to_string(js_lZ) +
+        "\njoyStick - lRx: " + std::to_string(js_lRx) +
+        "\njoyStick - lRy: " + std::to_string(js_lRy) +
+        "\njoyStick - lRz: " + std::to_string(js_lRz) +
+        "\njoyStick - buttons: " + std::to_string(js_buttons) +
+        "\njoyStick - rglSlider[2]: ( " + std::to_string(js_rglSlider[0]) + ", " + std::to_string(js_rglSlider[1]) + " )" ;
+
+    return joy_data;
+}
 
 void run_publisher_application() {
 
@@ -173,6 +194,10 @@ void run_publisher_application() {
                     steeringWheel_writer.write(steeringWheel_data);
                     joyStick_writer.write(joyStick_data);
 
+                    std::string con_data = convertToString_con(sw_lX, sw_lY, sw_lRz, sw_rglSlider_0, sw_buttons);
+                    std::string joy_data = convertToString_joy(js_lX, js_lY, js_lZ, js_lRx, js_lRy, js_lRz, js_buttons, &js_rglSlider[2]);
+
+                    update_Sent_text_display(con_data +'\n'+ joy_data);
 
                     std::cout << "Writing: steeringWheel_data & joyStick_data" << std::endl;
                 }
@@ -198,6 +223,9 @@ void run_publisher_application() {
 
                     std::cout << "Writing: steeringWheel_data" << std::endl;
 
+                    std::string con_data = convertToString_con(sw_lX, sw_lY, sw_lRz, sw_rglSlider_0, sw_buttons);
+
+                    update_Sent_text_display(con_data);
                 }
                 else if (!steeringWheel_state && joyStick_state) {
                     std::cout << "Detected: joystick." << std::endl;
@@ -226,6 +254,9 @@ void run_publisher_application() {
 
                     std::cout << "Writing: joyStick_data" << std::endl;
 
+                    std::string joy_data = convertToString_joy(js_lX, js_lY, js_lZ, js_lRx, js_lRy, js_lRz, js_buttons, &js_rglSlider[2]);
+
+                    update_Sent_text_display( joy_data);
                 }
                 else {
                     std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;

@@ -22,7 +22,6 @@ std::thread tele_publisher;
 std::thread tele_subscriber;
 bool is_running = false;
 
-std::mutex data_mutex;
 HWND hwndReceivedTextDisplay;
 HWND hwndSentTextDisplay;
 std::string received_data = "No data received yet";
@@ -37,14 +36,12 @@ void signal_handler(int signal) {
 
 
 void update_Recieved_text_display(std::string received_data) {
-    std::lock_guard<std::mutex> lock(data_mutex);
-    std::string display_text = "Received Data: " + received_data;
+    std::string display_text = "Received Data: \n" + received_data;
     SetWindowText(hwndReceivedTextDisplay, display_text.c_str());
 }
 
 void update_Sent_text_display(std::string sent_data) {
-    std::lock_guard<std::mutex> lock(data_mutex);
-    std::string display_text = "Sent Data: " + sent_data;
+    std::string display_text = "Sent Data: \n" + sent_data;
     SetWindowText(hwndSentTextDisplay, display_text.c_str());
 }
 
@@ -70,16 +67,20 @@ LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) 
         if (LOWORD(wParam) == 1) {  // Begin button clicked
             if (!is_running) {
                 is_running = true;
-                tele_publisher = std::thread(run_publisher_application);
+                shutdown_requested = false;
                 tele_subscriber = std::thread(run_subscriber_application);
+                tele_publisher = std::thread(run_publisher_application);
+                
             }
         }
 
         else if (LOWORD(wParam) == 2) {  // Stop button clicked
             if (is_running) {
                 std::raise(SIGINT);
-                tele_publisher.join();
+                shutdown_requested = true;
                 tele_subscriber.join();
+                tele_publisher.join();
+                dds::domain::DomainParticipant::finalize_participant_factory();
             }
         }
         break;
@@ -184,9 +185,6 @@ int main(int argc, char* argv[]) {
         std::cerr << "Unknown Error :(" << std::endl;
         return EXIT_FAILURE;
     }
-
-
-    dds::domain::DomainParticipant::finalize_participant_factory();
 
     return EXIT_SUCCESS;
 }

@@ -21,6 +21,7 @@ void process_button_data(dds::sub::DataReader< ::streamdeck_buttons_data> reader
     for (auto sample : samples) {
         if (sample.info().valid()) {
             std::cout << sample.data() << std::endl;
+            update_Recieved_text_display(std::to_string(sample.data().buttons()));
         }
         else {
             std::cout << "Instance state changed to "
@@ -36,6 +37,11 @@ void process_imu_data(dds::sub::DataReader< ::IMU_data> reader) {
     for (auto sample : samples) {
         if (sample.info().valid()) {
             std::cout << sample.data() << std::endl;
+            update_Recieved_text_display(
+                "\nData from IMU sensor : \nacc: \n\t" + std::to_string(sample.data().acc()[0]) +"\n\t" + std::to_string(sample.data().acc()[1]) + "\n\t" + std::to_string(sample.data().acc()[2]) +
+                "\nangle: \n\t" + std::to_string(sample.data().angle()[0]) + "\n\t" + std::to_string(sample.data().angle()[1]) + "\n\t" + std::to_string(sample.data().angle()[2]) +
+                "\nmag: \n\t" + std::to_string(sample.data().mag()[0]) + "\n\t" + std::to_string(sample.data().mag()[1]) + "\n\t" + std::to_string(sample.data().mag()[2]) +
+                "\ngyro: \n\t" + std::to_string(sample.data().gyro()[0]) + "\n\t" + std::to_string(sample.data().gyro()[1]) + "\n\t" + std::to_string(sample.data().gyro()[2]));
         }
         else {
             std::cout << "Instance state changed to "
@@ -63,7 +69,7 @@ void run_subscriber_application() {
     dds::sub::cond::ReadCondition read_buttons_condition(
         buttons_reader,
         dds::sub::status::DataState::any(),
-        [buttons_reader]() { process_button_data(buttons_reader); });
+       [buttons_reader]() { process_button_data(buttons_reader); });
 
     dds::sub::cond::ReadCondition read_imu_condition(
         imu_reader,
@@ -83,6 +89,7 @@ void run_subscriber_application() {
         streamdeck_button_waitset.dispatch(dds::core::Duration(1));
 
         //Frequency of the imu part.
+        std::cout << "hello" << std::endl;
         imu_waitset.dispatch(dds::core::Duration(0.05));
     }
 }
