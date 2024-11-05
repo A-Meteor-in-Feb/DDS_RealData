@@ -20,6 +20,10 @@
 
 #define MAX_NUMBER_OF_CONTROLLERS 5
 
+
+void update_Sent_text_display(std::string sent_data);
+
+
 wchar_t name[256];
 int wheelIndex = -1;
 int joystickIndex = -1;
@@ -99,7 +103,9 @@ void run_publisher_application() {
     LogiPlayLeds(wheelIndex, 4, 1, 6);
     LogiSetOperatingRange(wheelIndex, 900);
 
-    dds::domain::DomainParticipant participant(0);
+    int domain_id = 0;
+
+    dds::domain::DomainParticipant participant(domain_id);
     dds::pub::Publisher teleop_publisher(participant);
 
     dds::topic::Topic< ::steeringWheel_data> steeringWheel_topic(participant, "steeringWheel_topic");
@@ -125,6 +131,9 @@ void run_publisher_application() {
                 joyStick_state = LogiGetState(joystickIndex);
 
                 if (steeringWheel_state && joyStick_state) {
+
+                    std::cout << "Detected: controller and joystick." << std::endl;
+
                     std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
                     std::bitset<32> joyButtons = getBitwiseButtons(joyStick_state, 32);
 
@@ -167,6 +176,57 @@ void run_publisher_application() {
 
                     std::cout << "Writing: steeringWheel_data & joyStick_data" << std::endl;
                 }
+                else if (steeringWheel_state && !joyStick_state) {
+                    std::cout << "Detected: controller." << std::endl;
+
+                    std::bitset<32> wheelButtons = getCombinedButtons(steeringWheel_state);
+
+                    //Data needed to transmit
+                    long sw_lX = steeringWheel_state->lX;
+                    long sw_lY = steeringWheel_state->lY;
+                    long sw_lRz = steeringWheel_state->lRz;
+                    long sw_rglSlider_0 = steeringWheel_state->rglSlider[0];
+                    unsigned long sw_buttons = wheelButtons.to_ulong();
+
+                    steeringWheel_data.lX(sw_lX);
+                    steeringWheel_data.lY(sw_lY);
+                    steeringWheel_data.lRz(sw_lRz);
+                    steeringWheel_data.rglSlider_0(sw_rglSlider_0);
+                    steeringWheel_data.buttons(sw_buttons);
+
+                    steeringWheel_writer.write(steeringWheel_data);
+
+                    std::cout << "Writing: steeringWheel_data" << std::endl;
+
+                }
+                else if (!steeringWheel_state && joyStick_state) {
+                    std::cout << "Detected: joystick." << std::endl;
+
+                    std::bitset<32> joyButtons = getBitwiseButtons(joyStick_state, 32);
+
+                    long js_lX = joyStick_state->lX;
+                    long js_lY = joyStick_state->lY;
+                    long js_lZ = joyStick_state->lZ;
+                    long js_lRx = joyStick_state->lRx;
+                    long js_lRy = joyStick_state->lRy;
+                    long js_lRz = joyStick_state->lRz;
+                    unsigned long js_buttons = joyButtons.to_ulong();
+                    long js_rglSlider[2] = { joyStick_state->rglSlider[0], joyStick_state->rglSlider[1] };
+
+                    joyStick_data.lX(js_lX);
+                    joyStick_data.lY(js_lY);
+                    joyStick_data.lZ(js_lZ);
+                    joyStick_data.lRx(js_lRx);
+                    joyStick_data.lRy(js_lRy);
+                    joyStick_data.lRz(js_lRz);
+                    joyStick_data.buttons(js_buttons);
+                    joyStick_data.rglSlider({ js_rglSlider[0], js_rglSlider[1] });
+
+                    joyStick_writer.write(joyStick_data);
+
+                    std::cout << "Writing: joyStick_data" << std::endl;
+
+                }
                 else {
                     std::cerr << "Error: wheel_state or joy_state is nullptr" << std::endl;
                 }
@@ -183,7 +243,5 @@ void run_publisher_application() {
             Sleep(33); // ~30Hz
         }
 
-        // Send once every second
-        //rti::util::sleep(dds::core::Duration(1));
     }
 }
