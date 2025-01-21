@@ -11,7 +11,7 @@ Then, we use two threads to publish and subscribe different topics respectively.
 
 ### runPublisher.cpp
 This program is modified to use based on Dogan's original codes.
-It processes the corresponding button data from the controller and joyStick.
+It processes the corresponding button data from the controller and joystick.
 Also, it initializes the controller and joy stick devices.
 In the end, it publishes the relevant data to the subscribers.
 The frequency of publishing these topics is around 30 Hz (Sleep(33)).

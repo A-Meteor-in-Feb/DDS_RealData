@@ -129,27 +129,27 @@ def process_data(reader):
     return [height, depth, auto_flag]
 
 
-def run_publisher():
-
-    domain_id = 0
-
-    participant = dds.DomainParticipant(domain_id)
-
-    topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
-
-    writer = dds.DataWriter(participant.implicit_publisher, topic)
-
-    button_data = streamdeck_buttons_data()
-
-    try:
-        # Modify the data to be sent here
-        button_data.buttons = button_states
-        print("Writing streamdeck_buttons_data")
-
-        writer.write(button_data)
-        # time.sleep(1)
-    except KeyboardInterrupt:
-        print("preparing to shut down...")
+# def run_publisher():
+#
+#     domain_id = 0
+#
+#     participant = dds.DomainParticipant(domain_id)
+#
+#     topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
+#
+#     writer = dds.DataWriter(participant.implicit_publisher, topic)
+#
+#     button_data = streamdeck_buttons_data()
+#
+#     try:
+#         # Modify the data to be sent here
+#         button_data.buttons = button_states
+#         print("Writing streamdeck_buttons_data")
+#
+#         writer.write(button_data)
+#         # time.sleep(1)
+#     except KeyboardInterrupt:
+#         print("preparing to shut down...")
 
 
 # def run_subscriber():

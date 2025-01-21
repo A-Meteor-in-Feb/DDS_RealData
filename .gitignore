@@ -53,3 +53,15 @@ INTEGRATION_GO/Vehicle_side/.vs/
 INTEGRATION_GO/Vehicle_side/objs/
 INTEGRATION_GO/Streamdeck_side/.idea/*
 INTEGRATION_GO/Streamdeck_side/__pycache__/*
+RTI_Version_Apps/command_center/objs/
+RTI_Version_Apps/command_center/*.vcxproj
+RTI_Version_Apps/command_center/*.filters
+RTI_Version_Apps/command_center/*.sln
+RTI_Version_Apps/command_center/*.user
+RTI_Version_Apps/command_center/.vs/
+RTI_Version_Apps/teleop_side/objs/
+RTI_Version_Apps/teleop_side/*.vcxproj
+RTI_Version_Apps/teleop_side/*.filters
+RTI_Version_Apps/teleop_side/*.sln
+RTI_Version_Apps/teleop_side/*.user
+RTI_Version_Apps/teleop_side/.vs/
