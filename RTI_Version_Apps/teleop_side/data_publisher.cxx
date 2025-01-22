@@ -15,6 +15,9 @@
 void publisher_control_domain(int& tele, std::string& partition_name);
 void subscriber_control_domain(int& tele, std::string& partition_name);
 
+int count_ConMsg = 0;
+
+
 void run_command_domain(int& tele){
 
     const std::string filename = "tele_connection_msg.txt";
@@ -71,6 +74,9 @@ void run_command_domain(int& tele){
                 const dds::sub::SampleInfo& info = iter->info();
 
                 if (info.valid()) {
+
+                    count_ConMsg += 1;
+
                     std::string vehicle_id = data.vehicle_id();
 
                     if (vehicle_id == "known") {
@@ -108,6 +114,11 @@ void run_command_domain(int& tele){
             std::this_thread::sleep_for(std::chrono::microseconds(20));
         }
     }
+
+    std::cout << "preparing shutdown ..." << std::endl;
+    std::cout << "Totally received connection msg from the command center: " << count_ConMsg << std::endl;
+    std::cout << "From teleop side, totally 100 controller messages are sent." << std::endl;
+
 }
 
 int main(int argc, char *argv[]){

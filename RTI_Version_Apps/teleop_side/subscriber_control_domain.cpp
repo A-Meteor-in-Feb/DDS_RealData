@@ -14,6 +14,9 @@
 #include "TimeStampLogger.h"
 
 
+int count_recvImu = 0, count_recvSd = 0;
+
+
 void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 
 	std::string filename1 = "tele_imu.txt";
@@ -74,7 +77,7 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 				if (info.valid()) {
 					connected_sd = true;
 					std::cout << "streamdeck_buttons_data: " << data << std::endl;
-
+					count_recvSd += 1;
 				}
 
 			}
@@ -99,11 +102,15 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 
 				if (info.valid()) {
 					std::cout << "imu_data: " << data << std::endl;
-
+					count_recvImu += 1;
 				}
 
 			}
 		}
 
 	}
+
+	std::cout << "Totally received IMU messages from vehicle   : " << count_recvImu << std::endl;
+	std::cout << "Totally received Buttons data from streamdeck: " << count_recvSd << std::endl;
+
 }

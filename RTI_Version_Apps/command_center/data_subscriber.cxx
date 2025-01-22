@@ -21,6 +21,8 @@ std::vector<std::string> online_tele;
 std::vector<std::string> online_vehicle;
 std::map<std::string, std::string> con_te_ve;
 
+int count_ConMsg_v = 0, count_ConMsg_t = 0;
+
 
 void publish_known_msg(dds::domain::DomainParticipant& command_participant, dds::topic::Topic< ::connection_msg>& con_topic, const std::string& tele_id, const std::string& vehicle_id) {
 
@@ -36,12 +38,12 @@ void publish_known_msg(dds::domain::DomainParticipant& command_participant, dds:
 		auto writer_qos = provider.datawriter_qos("myqos::reliable_writer");
 
 		dds::pub::DataWriter< ::connection_msg> con_topic_writer(command_con_publisher, con_topic, writer_qos);
-		
+
 		::connection_msg con_msg(tele_id, vehicle_id);
 
 		con_topic_writer.write(con_msg);
 
-
+		count_ConMsg_v += 1;
 	}
 
 	if (vehicle_id == "known") {
@@ -62,7 +64,7 @@ void publish_known_msg(dds::domain::DomainParticipant& command_participant, dds:
 
 		con_topic_writer.write(con_msg);
 
-
+		count_ConMsg_t += 1;
 
 	}
 }
@@ -86,6 +88,10 @@ void publish_connection_msg(dds::domain::DomainParticipant& command_participant,
 		::connection_msg con_msg(tele_id, vehicle_id);
 
 		con_topic_writer.write(con_msg);
+
+		count_ConMsg_t += 1;
+		count_ConMsg_v += 1;
+
 	}
 	else if (!tele_again && vehicle_again) {
 		dds::pub::qos::PublisherQos pub_qos;
@@ -103,6 +109,9 @@ void publish_connection_msg(dds::domain::DomainParticipant& command_participant,
 		::connection_msg con_msg(tele_id, vehicle_id);
 
 		con_topic_writer.write(con_msg);
+
+		count_ConMsg_v += 1;
+
 	}
 	else if (tele_again && !vehicle_again) {
 		dds::pub::qos::PublisherQos pub_qos;
@@ -120,6 +129,8 @@ void publish_connection_msg(dds::domain::DomainParticipant& command_participant,
 		::connection_msg con_msg(tele_id, vehicle_id);
 
 		con_topic_writer.write(con_msg);
+
+		count_ConMsg_t += 1;
 	}
 }
 
@@ -148,33 +159,33 @@ void judge_connection(dds::domain::DomainParticipant& command_participant, dds::
 }
 
 
-void run_subscriber_application(){
-    
-    const std::string filename1 = "command_tele.txt";
-    const std::string filename2 = "command_vehicle.txt";
+void run_subscriber_application() {
 
-    int command_domain = 0;
+	const std::string filename1 = "command_tele.txt";
+	const std::string filename2 = "command_vehicle.txt";
 
-    dds::domain::DomainParticipant command_participant(command_domain);
+	int command_domain = 0;
 
-    dds::topic::Topic< ::connection_msg> con_topic(command_participant, "connection_msg");
-    dds::topic::Topic< ::disconnection_msg> discon_topic(command_participant, "disconnection_msg");
+	dds::domain::DomainParticipant command_participant(command_domain);
 
-    dds::sub::Subscriber command_subscriber(command_participant);
+	dds::topic::Topic< ::connection_msg> con_topic(command_participant, "connection_msg");
+	dds::topic::Topic< ::disconnection_msg> discon_topic(command_participant, "disconnection_msg");
 
-    dds::topic::Topic< ::tele_status> tele_status_topic(command_participant, "tele_status");
-    dds::topic::Topic< ::vehicle_status> vehicle_status_topic(command_participant, "vehicle_status");
+	dds::sub::Subscriber command_subscriber(command_participant);
 
-    dds::sub::DataReader< ::tele_status> tele_status_reader(command_subscriber, tele_status_topic);
-    dds::sub::DataReader< ::vehicle_status> vehicle_status_reader(command_subscriber, vehicle_status_topic);
+	dds::topic::Topic< ::tele_status> tele_status_topic(command_participant, "tele_status");
+	dds::topic::Topic< ::vehicle_status> vehicle_status_topic(command_participant, "vehicle_status");
 
-    dds::sub::LoanedSamples< ::tele_status> tele_status_samples;
-    dds::sub::LoanedSamples< ::vehicle_status> vehicle_status_samples;
-    
+	dds::sub::DataReader< ::tele_status> tele_status_reader(command_subscriber, tele_status_topic);
+	dds::sub::DataReader< ::vehicle_status> vehicle_status_reader(command_subscriber, vehicle_status_topic);
 
-    while (!shutdown_requested ) {
-        
-        tele_status_samples = tele_status_reader.take();
+	dds::sub::LoanedSamples< ::tele_status> tele_status_samples;
+	dds::sub::LoanedSamples< ::vehicle_status> vehicle_status_samples;
+
+
+	while (!shutdown_requested) {
+
+		tele_status_samples = tele_status_reader.take();
 
 		if (tele_status_samples.length() > 0) {
 
@@ -273,21 +284,27 @@ void run_subscriber_application(){
 			TimestampLogger::writeToFile(filename1, timestamp);
 			TimestampLogger::writeToFile(filename2, timestamp);
 		}
-    }
+	}
+
+	std::cout << "Preparing to shutdown ..." << std::endl;
+	std::cout << "Totally sent connection msg to vehicle side: " << count_ConMsg_v << std::endl;
+	std::cout << "Totally sent connection msg to teleop side: " << count_ConMsg_t << std::endl;
+
 }
 
-int main(int argc, char *argv[]){
+int main(int argc, char* argv[]) {
 
 
-    try {
-        run_subscriber_application();
-    } catch (const std::exception& ex) {
-        std::cerr << "Exception in run_subscriber_application(): " << ex.what() << std::endl;
-        return EXIT_FAILURE;
-    }
+	try {
+		run_subscriber_application();
+	}
+	catch (const std::exception& ex) {
+		std::cerr << "Exception in run_subscriber_application(): " << ex.what() << std::endl;
+		return EXIT_FAILURE;
+	}
 
 
-    dds::domain::DomainParticipant::finalize_participant_factory();
+	dds::domain::DomainParticipant::finalize_participant_factory();
 
-    return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }
