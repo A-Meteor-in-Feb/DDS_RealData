@@ -1,6 +1,8 @@
+import threading
 import time
 import keyboard as kb
 import os
+from keyboard import add_hotkey
 from PIL import Image, ImageDraw, ImageFont
 from StreamDeck.DeviceManager import DeviceManager
 from StreamDeck.ImageHelpers import PILHelper
@@ -8,6 +10,7 @@ from StreamDeck.ImageHelpers import PILHelper
 import rti.connextdds as dds
 from data import statistic_data
 from data import streamdeck_buttons_data
+from data import partition_data
 
 # Folder location of image assets used by this program
 ASSETS_PATH = os.path.join(os.path.dirname(__file__), "images")
@@ -42,11 +45,17 @@ gear_update_needed = False
 selected_gear = current_gear
 
 # Desired serial number
-DESIRED_SERIAL_NUMBER = "DL41L2A41032"
+DESIRED_SERIAL_NUMBER = "A00SA3462OG542"
 
 # Initialize button states as a 16-bit integer
 button_states = 64
 
+control_partition_name = ""
+
+count_sentMsg = 0
+count_recvMsg = 0
+
+exit_flag = False
 
 def read_streamdeck():
 
@@ -116,80 +125,44 @@ def update_gear(deck, selected_gear):
     return False
 
 
-def run_publisher():
-
-    domain_id = 0
-
-    participant = dds.DomainParticipant(domain_id)
-
-    topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
-
-    writer = dds.DataWriter(participant.implicit_publisher, topic)
-
-    button_data = streamdeck_buttons_data()
-
-    try:
-        # Modify the data to be sent here
-        button_data.buttons = button_states
-        print("Writing streamdeck_buttons_data")
-
-        writer.write(button_data)
-        time.sleep(1)
-    except KeyboardInterrupt:
-        print("preparing to shut down...")
+def exit_program(deck):
+    global exit_flag
+    print("Exiting program.")
+    if deck:
+        deck.set_brightness(40)
+        deck.reset()
+        deck.close()
+    exit_flag = True
+    os._exit(0)
 
 
-def process_data(reader):
-    samples = reader.take_data()
-    print(f"Received: {samples[0]}")
-    return [samples[0].height, samples[0].depth, samples[0].auto_flag]
+def hotkey_listener(streamdeck):
+    add_hotkey('q', lambda: exit_program(streamdeck))
+    while not exit_flag:
+        time.sleep(0.1)
 
 
-
-def run_subscriber():
-
-    domain_id = 0
-
-    participant = dds.DomainParticipant(domain_id)
-
-    topic = dds.Topic(participant, "statistic_data", statistic_data)
-
-    reader = dds.DataReader(participant.implicit_subscriber, topic)
-
-    message = []
-
-    def condition_handler(_):
-        nonlocal reader
-        nonlocal message
-        message = process_data(reader)
-
-    status_condition = dds.StatusCondition(reader)
-
-    status_condition.enabled_statuses = dds.StatusMask.DATA_AVAILABLE
-    status_condition.set_handler(condition_handler)
-
-    waitset = dds.WaitSet()
-    waitset += status_condition
-
-    try:
-        waitset.dispatch(dds.Duration(1))  # Wait up to 1s each time
-    except KeyboardInterrupt:
-       print("preparing to shut down...")
-
-    return message
-
-
-
-def main():
-    global gear_update_needed, selected_gear
-
-    streamdeck = read_streamdeck()
-    if not streamdeck:
-        return
+def main(participant, control_partition_name, streamdeck):
+    global gear_update_needed, selected_gear, count_sentMsg, count_recvMsg
 
     initialize = False
 
-    run_publisher()
+    publisher_qos = dds.PublisherQos(participant.default_publisher_qos)
+    publisher_qos.partition.name = [control_partition_name]
+    publisher = dds.Publisher(participant, publisher_qos)
+    topic = dds.Topic(participant, "streamdeck_buttons_data", streamdeck_buttons_data)
+    writer = dds.DataWriter(publisher, topic)
+    button_data = streamdeck_buttons_data()
+    button_data.buttons = button_states
+    print("Writing streamdeck_buttons_data")
+    writer.write(button_data)
+
+    timestamp_s = time.time()
+    formatted_time_s = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp_s))
+    file_name_s = "send_msg.txt"
+    with open(file_name_s, "a") as file:
+        file.write(f"Timestamp: {timestamp_s}, Formatted: {formatted_time_s}\n")
+    count_sentMsg += 1
 
     show_text(streamdeck, 8, "Connecting", 14, centered=True)
 
@@ -219,44 +192,61 @@ def main():
             update_button_state(key, state)
 
         if button_states != previous_button_states:
-            run_publisher()
-    
-    kb.add_hotkey('q', lambda: exit_program(streamdeck))
-    
-    def exit_program(deck):
-        print("Exiting program.")
-        if deck:
-            deck.set_brightness(40)
-            deck.reset()
-            deck.close()
-        os._exit(0)
+            button_data.buttons = button_states
+            print("Writing streamdeck_buttons_data")
+            writer.write(button_data)
+
+            timestamp_s = time.time()
+            formatted_time_s = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp_s))
+            file_name_s = "send_msg.txt"
+            with open(file_name_s, "a") as file:
+                file.write(f"Timestamp: {timestamp_s}, Formatted: {formatted_time_s}\n")
+            count_sentMsg += 1
 
 
-    try: 
-        while True:
+    try:
+
+        subscriber_qos = dds.SubscriberQos(participant.default_subscriber_qos)
+        subscriber_qos.partition.name = [control_partition_name]
+        subscriber = dds.Subscriber(participant, subscriber_qos)
+        statistic_topic = dds.Topic(participant, "statistic_data", statistic_data)
+        reader = dds.DataReader(subscriber, statistic_topic)
+
+        while not exit_flag:
             current_time = time.time()
-            
-            try:
 
-                message = run_subscriber()
+            samples = reader.take()
 
-                print("Received message ", message)
+            if len(samples) > 0:
+                timestamp_r = time.time()
+                formatted_time_r = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(timestamp_r))
+                file_name_r = "receive_msg.txt"
+                with open(file_name_r, "a") as file:
+                    file.write(f"Timestamp: {timestamp_r}, Formatted: {formatted_time_r}\n")
+                count_recvMsg += 1
 
-                if not initialize:
-                    for button in GEAR_BUTTONS:
-                        set_button_image(streamdeck, button, 'unselect')
+                for sample in samples:
+                    message[0] = sample.__dict__['height']
+                    message[1] = sample.__dict__['depth']
+                    message[2] = sample.__dict__['auto_flag']
+                    print("Received message: ")
+                    print(sample)
 
-                    set_button_image(streamdeck, list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], 'select')
-                    show_text(streamdeck, 8, "", 22)
-                    update_button_state(list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], True)
-                    initialize = True
 
-                height = message[0]
-                depth = message[1]
-                auto_flag = message[2]
-                last_received_time = current_time
-            except Exception as e:
-                print("Exception", e)
+            if not initialize:
+                for button in GEAR_BUTTONS:
+                    set_button_image(streamdeck, button, 'unselect')
+
+                set_button_image(streamdeck, list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], 'select')
+                show_text(streamdeck, 8, "", 22)
+                update_button_state(list(GEAR_BUTTONS.keys())[list(GEAR_BUTTONS.values()).index(current_gear)], True)
+                initialize = True
+
+            height = message[0]
+            depth = message[1]
+            auto_flag = message[2]
+            last_received_time = current_time
+
 
             if gear_update_needed:
                 update_gear(streamdeck, selected_gear)
@@ -281,17 +271,44 @@ def main():
                     print("Cleared height and depth due to timeout")
 
 
-            time.sleep(1)
-
     except KeyboardInterrupt:
-        pass
+        print("Totally sent buttons data: ", count_sentMsg)
+        print("Totally received data: ", count_recvMsg)
+        exit_program(streamdeck)
     except Exception:
         print("Exception in main loop")
     finally:
+        print("Totally sent buttons data: ", count_sentMsg)
+        print("Totally received data: ", count_recvMsg)
         exit_program(streamdeck)
 
 
 
 if __name__ == "__main__":
     print(ASSETS_PATH)
-    main()
+
+    streamdeck = read_streamdeck()
+    if not streamdeck:
+        exit(0)
+
+    listener_thread = threading.Thread(target=lambda: hotkey_listener(streamdeck))
+    listener_thread.start()
+
+    tele_id = int(input("What's the corresponding teleop id: "))
+    streamdeck_name = "streamdeck_tele" + str(tele_id)
+
+    domain_id = 1
+    participant = dds.DomainParticipant(domain_id)
+    sub_qos = dds.SubscriberQos(participant.default_subscriber_qos)
+    sub_qos.partition.name = [streamdeck_name]
+    subscriber = dds.Subscriber(participant, sub_qos)
+    partition_topic = dds.Topic(participant, "partition_data", partition_data)
+    reader = dds.DataReader(subscriber, partition_topic)
+    while control_partition_name == "" and not exit_flag:
+        samples = reader.take()
+        if len(samples) > 0:
+            for sample in samples:
+                control_partition_name = sample.__dict__['name']
+
+    print(control_partition_name)
+    main(participant, control_partition_name, streamdeck)

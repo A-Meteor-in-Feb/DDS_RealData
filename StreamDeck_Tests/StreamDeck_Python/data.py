@@ -24,3 +24,11 @@ class statistic_data:
     height: float = 0.0
     depth: float = 0.0
     auto_flag: idl.int16 = 0
+
+@idl.struct(
+    member_annotations = {
+        'name': [idl.bound(255)],
+    }
+)
+class partition_data:
+    name: str = ""

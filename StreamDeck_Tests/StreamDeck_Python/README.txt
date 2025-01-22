@@ -1,6 +1,6 @@
 Welcome to your first Connext DDS example!
 
-This Python example was generated using the data type statistic_data
+This Python example was generated using the data type partition_data
 from data.idl.
 
 This example has one application (data_program.py)

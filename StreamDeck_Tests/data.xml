@@ -21,6 +21,10 @@
             <member name="auto_flag" type="short" />
         </struct>
 
+        <struct name="partition_data">
+            <member name="name" type="string"></member>
+        </struct>
+
     </types>
 
     <!-- Domain Library
