@@ -13,12 +13,12 @@
 
 
 void publisher_control_domain(int& tele, std::string& partition_name);
-void subscriber_control_domain(int& tele, std::string& partition_name);
+//void subscriber_control_domain(int& tele, std::string& partition_name);
 
 int count_ConMsg = 0;
 
 
-void run_command_domain(int& tele){
+int run_command_domain(int& tele){
 
     //const std::string filename = "tele_connection_msg.txt";
 
@@ -54,10 +54,11 @@ void run_command_domain(int& tele){
 
     dds::sub::LoanedSamples< ::connection_msg> con_samples;
 
-    bool known = false;
+    std::atomic<bool> known{ false };
+    std::atomic<bool> conducted{ false };
     std::string timestamp;
 
-    while (!shutdown_requested) {
+    while (true) {
 
         con_samples = con_reader.take();
 
@@ -67,61 +68,64 @@ void run_command_domain(int& tele){
             //TimestampLogger::writeToFile(filename, timestamp);
             std::cout << "receive connection msg at: " << timestamp << std::endl;
 
-            dds::sub::LoanedSamples< ::connection_msg>::const_iterator iter;
+            dds::sub::LoanedSamples< ::connection_msg>::const_iterator iter = con_samples.begin();
 
-            for (iter = con_samples.begin(); iter < con_samples.end(); ++iter) {
+            const ::connection_msg& data = iter->data();
+            const dds::sub::SampleInfo& info = iter->info();
 
-                const ::connection_msg& data = iter->data();
-                const dds::sub::SampleInfo& info = iter->info();
+            if (info.valid()) {
 
-                if (info.valid()) {
+                count_ConMsg += 1;
 
-                    count_ConMsg += 1;
+                std::string vehicle_id = data.vehicle_id();
 
-                    std::string vehicle_id = data.vehicle_id();
+                if (vehicle_id == "known") {
 
-                    if (vehicle_id == "known") {
+                    known.store(true);
+                    std::cout << "non-matched vehicle for now ..." << std::endl;
 
-                        known = true;
-                        std::cout << "non-matched vehicle for now ..." << std::endl;
+                }
+                else {
+                    std::cout << "match to vehicle: " << vehicle_id << std::endl;
 
-                    }
-                    else {
-                        std::cout << "match to vehicle: " << vehicle_id << std::endl;
+                    online_state = true;
+                    connected_state = true;
+                    ::tele_status tele_status_data(tele_id, online_state, connected_state);
+                    status_writer.write(tele_status_data);
 
-                        online_state = true;
-                        connected_state = true;
-                        ::tele_status tele_status_data(tele_id, online_state, connected_state);
-                        status_writer.write(tele_status_data);
+                    std::string name = data.tele_id() + data.vehicle_id();
 
-                        std::string name = data.tele_id() + data.vehicle_id();
-
-                        std::cout << "partition name: " << name << std::endl;
+                    std::cout << "partition name: " << name << std::endl;
 
 
-                        std::thread tele_control_publisher(publisher_control_domain, std::ref(tele), std::ref(name));
-                        std::thread tele_control_subscriber(subscriber_control_domain, std::ref(tele), std::ref(name));
+                    std::thread tele_control_publisher(publisher_control_domain, std::ref(tele), std::ref(name));
+                    //std::thread tele_control_subscriber(subscriber_control_domain, std::ref(tele), std::ref(name));
 
-                        tele_control_publisher.join();
-                        tele_control_subscriber.join();
-                    }
+                    tele_control_publisher.join();
+                    //tele_control_subscriber.join();
+
+                    conducted.store(true);
                 }
             }
-
         }
-        else if (!known) {
+        else if (!known.load()) {
             ::tele_status tele_status_data(tele_id, online_state, connected_state);
             status_writer.write(tele_status_data);
             timestamp = TimestampLogger::getTimestamp();
             std::cout << "publish status msg at: " << timestamp << std::endl;
-            std::this_thread::sleep_for(std::chrono::microseconds(20));
+            std::this_thread::sleep_for(std::chrono::microseconds(3000000));
+        }
+
+        if (conducted.load()) {
+            std::cout << "preparing shutdown ..." << std::endl;
+            break;
         }
     }
 
-    std::cout << "preparing shutdown ..." << std::endl;
     std::cout << "Totally received connection msg from the command center: " << count_ConMsg << std::endl;
     std::cout << "From teleop side, totally 200 controller messages are sent." << std::endl;
 
+    return 1;
 }
 
 int main(int argc, char *argv[]){

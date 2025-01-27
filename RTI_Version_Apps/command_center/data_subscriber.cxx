@@ -184,7 +184,7 @@ void run_subscriber_application() {
 
 	std::string timestamp;
 
-	while (!shutdown_requested) {
+	while (true) {
 
 		tele_status_samples = tele_status_reader.take();
 
@@ -193,48 +193,46 @@ void run_subscriber_application() {
 			timestamp = TimestampLogger::getTimestamp();
 			std::cout << "receive status msg from tele: " << timestamp << std::endl;
 
+			dds::sub::LoanedSamples< ::tele_status>::const_iterator iter = tele_status_samples.begin();
 
-			dds::sub::LoanedSamples< ::tele_status>::const_iterator iter;
-			for (iter = tele_status_samples.begin(); iter < tele_status_samples.end(); ++iter) {
+			const ::tele_status& data = iter->data();
+			const dds::sub::SampleInfo& info = iter->info();
 
-				const ::tele_status& data = iter->data();
-				const dds::sub::SampleInfo& info = iter->info();
+			if (info.valid()) {
 
-				if (info.valid()) {
+				std::cout << "\ntele_status data:    " << data << std::endl;
 
-					std::cout << "\ntele_status data:    " << data << std::endl;
+				std::string tele_id = data.tele_id();
 
-					std::string tele_id = data.tele_id();
-
-					std::string tele_state = data.connected() ? "conneccted" : "online";
+				std::string tele_state = data.connected() ? "conneccted" : "online";
 
 
-					if (tele_state == "online" && con_te_ve.count(tele_id) == 0) {
-						bool usable = true;
+				if (tele_state == "online" && con_te_ve.count(tele_id) == 0) {
+					bool usable = true;
 
-						for (int i = 0; i < online_tele.size(); i++) {
-							if (online_tele.at(i) == tele_id) {
-								usable = false;
-								break;
-							}
-						}
-
-						if (usable) {
-							publish_known_msg(command_participant, con_topic, tele_id, "known");
-							timestamp = TimestampLogger::getTimestamp();
-							//TimestampLogger::writeToFile(filename1, timestamp);
-							online_tele.push_back(tele_id);
-							std::cout << "Publish connection msg to tele: " << timestamp << std::endl;
+					for (int i = 0; i < online_tele.size(); i++) {
+						if (online_tele.at(i) == tele_id) {
+							usable = false;
+							break;
 						}
 					}
-					else if (tele_state == "online" && con_te_ve.count(tele_id)) {
-						publish_connection_msg(command_participant, con_topic, tele_id, con_te_ve[tele_id], true, false);
-						std::string timestamp = TimestampLogger::getTimestamp();
+
+					if (usable) {
+						publish_known_msg(command_participant, con_topic, tele_id, "known");
+						timestamp = TimestampLogger::getTimestamp();
 						//TimestampLogger::writeToFile(filename1, timestamp);
-						std::cout << "publish connection msg to tele: " << timestamp << std::endl;
+						online_tele.push_back(tele_id);
+						std::cout << "Publish connection msg to tele: " << timestamp << std::endl;
 					}
 				}
+				else if (tele_state == "online" && con_te_ve.count(tele_id)) {
+					publish_connection_msg(command_participant, con_topic, tele_id, con_te_ve[tele_id], true, false);
+					std::string timestamp = TimestampLogger::getTimestamp();
+					//TimestampLogger::writeToFile(filename1, timestamp);
+					std::cout << "publish connection msg to tele: " << timestamp << std::endl;
+				}
 			}
+			
 		}
 
 		vehicle_status_samples = vehicle_status_reader.take();
@@ -244,15 +242,13 @@ void run_subscriber_application() {
 			std::cout << "receive status msg from vehicle: " << timestamp << std::endl;
 
 
-			dds::sub::LoanedSamples< ::vehicle_status>::const_iterator iter;
-			for (iter = vehicle_status_samples.begin(); iter < vehicle_status_samples.end(); ++iter) {
+			dds::sub::LoanedSamples< ::vehicle_status>::const_iterator iter = vehicle_status_samples.begin();
+			/*for (iter = vehicle_status_samples.begin(); iter < vehicle_status_samples.end(); ++iter) {
 
 				const ::vehicle_status& data = iter->data();
 				const dds::sub::SampleInfo& info = iter->info();
 
 				if (info.valid()) {
-
-					std::cout << "\nvehicle_status data: " << data << std::endl;
 
 					std::string vehicle_id = data.vehicle_id();
 
@@ -264,12 +260,14 @@ void run_subscriber_application() {
 
 						for (int i = 0; i < online_vehicle.size(); i++) {
 							if (online_vehicle.at(i) == vehicle_id) {
+								publish_known_msg(command_participant, con_topic, "known", vehicle_id);
 								usable = false;
 								break;
 							}
 						}
 
 						if (usable) {
+							std::cout << "here 1 - know vehicle" << std::endl;
 							publish_known_msg(command_participant, con_topic, "known", vehicle_id);
 							timestamp = TimestampLogger::getTimestamp();
 							//TimestampLogger::writeToFile(filename2, timestamp);
@@ -278,6 +276,7 @@ void run_subscriber_application() {
 						}
 					}
 					else if (vehicle_state == "online" && con_te_ve.count(vehicle_id)) {
+						std::cout << "here 2 - resend connection msg" << std::endl;
 						publish_connection_msg(command_participant, con_topic, con_te_ve[vehicle_id], vehicle_id, false, true);
 						timestamp = TimestampLogger::getTimestamp();
 						//TimestampLogger::writeToFile(filename2, timestamp);
@@ -287,10 +286,11 @@ void run_subscriber_application() {
 
 				}
 
-			}
+			}*/
 		}
 
 		if (online_tele.size() > 0 && online_vehicle.size() > 0) {
+			std::cout << "there are suitable pairs" << std::endl;
 			judge_connection(command_participant, con_topic);
 			std::string timestamp = TimestampLogger::getTimestamp();
 			//TimestampLogger::writeToFile(filename1, timestamp);
@@ -298,6 +298,8 @@ void run_subscriber_application() {
 			std::cout << "publish connection msg to tele: " << timestamp << std::endl;
 			std::cout << "publish connection msg to vehicle: " << timestamp << std::endl;
 		}
+
+		
 	}
 
 	std::cout << "Preparing to shutdown ..." << std::endl;
