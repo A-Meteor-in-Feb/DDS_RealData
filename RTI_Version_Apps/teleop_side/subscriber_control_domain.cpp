@@ -19,8 +19,8 @@ int count_recvImu = 0, count_recvSd = 0;
 
 void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 
-	std::string filename1 = "tele_imu.txt";
-	std::string filename2 = "tele_streamdeckButtons.txt";
+	//std::string filename1 = "tele_imu.txt";
+	//std::string filename2 = "tele_streamdeckButtons.txt";
 
 	std::string name = control_partition_name;
 	std::cout << "start running subscriber, partition: " << name << std::endl;
@@ -57,9 +57,11 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 	dds::topic::Topic< ::partition_name> partiton_topic(control_participant, "partition_data");
 	dds::pub::DataWriter< ::partition_name> partition_writer(teleSd_publisher, partiton_topic);
 
+	std::string timestamp;
 
 	while (!shutdown_requested) {
 
+		/*
 		// RECEIVE AND TAKE THE DATA SAMPLE
 		buttons_samples = buttons_reader.take();
 
@@ -85,14 +87,15 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 		else if (!connected_sd) {
 			::partition_name data(name);
 			partition_writer.write(data);
-		}
+		}*/
 
 		imu_samples = imu_reader.take();
 
 		if (imu_samples.length() > 0) {
 
-			std::string timestamp = TimestampLogger::getTimestamp();
-			TimestampLogger::writeToFile(filename1, timestamp);
+			timestamp = TimestampLogger::getTimestamp();
+			//TimestampLogger::writeToFile(filename1, timestamp);
+			std::cout << "receive imu data from the vehicle at: " << timestamp << std::endl;
 
 			dds::sub::LoanedSamples< ::IMU_data>::const_iterator iter;
 			for (iter = imu_samples.begin(); iter < imu_samples.end(); ++iter) {
@@ -101,7 +104,7 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 				const dds::sub::SampleInfo& info = iter->info();
 
 				if (info.valid()) {
-					std::cout << "imu_data: " << data << std::endl;
+					//std::cout << "imu_data: " << data << std::endl;
 					count_recvImu += 1;
 				}
 
@@ -111,6 +114,6 @@ void subscriber_control_domain(int& tele, std::string& control_partition_name) {
 	}
 
 	std::cout << "Totally received IMU messages from vehicle   : " << count_recvImu << std::endl;
-	std::cout << "Totally received Buttons data from streamdeck: " << count_recvSd << std::endl;
+	//std::cout << "Totally received Buttons data from streamdeck: " << count_recvSd << std::endl;
 
 }
