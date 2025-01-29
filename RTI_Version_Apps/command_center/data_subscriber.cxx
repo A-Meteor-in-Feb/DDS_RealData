@@ -259,7 +259,6 @@ void run_subscriber_application() {
 
 					for (int i = 0; i < online_vehicle.size(); i++) {
 						if (online_vehicle.at(i) == vehicle_id) {
-							publish_known_msg(command_participant, con_topic, "known", vehicle_id);
 							usable = false;
 							break;
 						}

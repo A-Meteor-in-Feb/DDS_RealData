@@ -10,8 +10,7 @@
 
 				<reliability> <kind>RELIABLE_RELIABILITY_QOS</kind> </reliability>
 				<history> 
-					<kind>KEEP_LAST_HISTORY_QOS</kind> 
-					<depth>1</depth>
+					<kind>KEEP_ALL_HISTORY_QOS</kind> 
 				</history>
 
 			</datawriter_qos>
@@ -22,8 +21,7 @@
 			<datareader_qos>
 				<reliability> <kind>RELIABLE_RELIABILITY_QOS</kind> </reliability>
  				<history> 
-					<kind>KEEP_LAST_HISTORY_QOS</kind>
-					<depth>1</depth>
+					<kind>KEEP_ALL_HISTORY_QOS</kind>
 				</history>
 			</datareader_qos>
 

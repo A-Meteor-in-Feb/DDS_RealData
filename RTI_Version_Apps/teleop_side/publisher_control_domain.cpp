@@ -119,7 +119,9 @@ void publisher_control_domain(int& tele, std::string& control_partition_name) {
 
     //const std::string filename1 = "tele_steeringWheel.txt";
     //const std::string filename2 = "tele_joystick.txt";
-
+    std::this_thread::sleep_for(std::chrono::microseconds(10000000));
+    std::this_thread::sleep_for(std::chrono::microseconds(10000000));
+    std::this_thread::sleep_for(std::chrono::microseconds(10000000));
     std::string tele_id = "tele" + std::to_string(tele);
 
     std::string name = control_partition_name;
@@ -181,8 +183,11 @@ void publisher_control_domain(int& tele, std::string& control_partition_name) {
     dds::pub::DataWriter< ::joyStick_data> joyStick_writer(tele_publisher, joyStick_topic);
 
     std::string timestamp;
+    const auto frame_duration = std::chrono::milliseconds(33);
 
     while (count_sentMsg > 0) {
+
+        auto start_time = std::chrono::steady_clock::now();
 
         if (GetKeyState('Q') < 0) {
             break;
@@ -262,7 +267,10 @@ void publisher_control_domain(int& tele, std::string& control_partition_name) {
 
             count_sentMsg -= 1;
 
-            std::this_thread::sleep_for(std::chrono::microseconds(33)); // ~30Hz
+            auto elapsed_time = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - start_time);
+            if (elapsed_time < frame_duration) {
+                std::this_thread::sleep_for(std::chrono::milliseconds(frame_duration - elapsed_time)); // ~30Hz
+            }
         }
     }
 

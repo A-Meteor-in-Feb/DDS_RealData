@@ -13,7 +13,7 @@
 
 
 void publisher_control_domain(int& tele, std::string& partition_name);
-//void subscriber_control_domain(int& tele, std::string& partition_name);
+void subscriber_control_domain(int& tele, std::string& partition_name);
 
 int count_ConMsg = 0;
 
@@ -99,10 +99,10 @@ int run_command_domain(int& tele){
 
 
                     std::thread tele_control_publisher(publisher_control_domain, std::ref(tele), std::ref(name));
-                    //std::thread tele_control_subscriber(subscriber_control_domain, std::ref(tele), std::ref(name));
+                    std::thread tele_control_subscriber(subscriber_control_domain, std::ref(tele), std::ref(name));
 
                     tele_control_publisher.join();
-                    //tele_control_subscriber.join();
+                    tele_control_subscriber.join();
 
                     conducted.store(true);
                 }
